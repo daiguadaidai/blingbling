@@ -3,9 +3,9 @@ package handle
 import "github.com/daiguadaidai/blingbling/config"
 
 type RequestReviewParam struct {
-	*config.ReviewConfig // 指定的数据库规则
+	config.ReviewConfig // 指定的数据库规则
 
-	*config.DBConfig // 链接数据库的参数
+	config.DBConfig // 链接数据库的参数
 
 	Sqls string // 用于审核的sql
 
@@ -348,4 +348,129 @@ func (this *RequestReviewParam) GetDBConfig() *config.DBConfig {
 		this.Password,
 		this.Database,
 	)
+}
+
+func (this *RequestReviewParam) ClientParams() string {
+    return `
+    可选参数                           参数类型         干什么用的
+    ------------------------ 需要审核的数据库相关参数 --------------------------
+    Username                           string          数据库用户名
+    Password                           string          数据库密码
+    Database                           string          数据库名称
+    Host                               string          数据库IP
+    Port                               int             数据库端口
+
+    ------------------------- 主角参数 ----------------------------------------
+    Sqls                               String          需要审核的sql, 多个使用逗号(,)隔开
+
+    ------------------------- 自定义审核规则参数 -------------------------------
+    RuleNameLength                     int             通用名字长度
+    RuleNameReg                        string          通用名字命名规则 正则规则: 以(字母/$/_)开头, 之后任意多个(字母/数字/_/$)
+    RuleCharSet                        string          通用字符集检测
+    RuleCollate                        string          通用 COLLATE
+    RuleAllowCreateDatabase            bool            是否允许创建数据库
+    RuleAllowDropDatabase              bool            是否允许删除数据库
+    RuleAllowDropTable                 bool            是否允许删除表
+    RuleAllowRenameTable               bool            是否允许 rename table
+    RuleAllowTruncateTable             bool            是否允许 truncate table
+    RuleTableEngine                    string          允许的存储引擎
+    RuleNotAllowColumnType             string          不允许使用的字段
+    RuleNeedTableComment               bool            表是否需要注释
+    RuleNeedColumnComment              bool            字段需要有注释
+    RulePKAutoIncrement                bool            主键自增
+    RuleNeedPK                         bool            必须要要有主键
+    RuleIndexColumnCount               int             索引字段个数
+    RuleTableNameReg                   string          表名 命名规范
+    RuleIndexNameReg                   string          索引命名规范
+    RuleUniqueIndexNameReg             string          唯一所有命名规范
+    RuleAllColumnNotNull               bool            所有字段都必须为 NOT NULL
+    RuleAllowForeignKey                bool            是否允许使用外键
+    RuleAllowFullText                  bool            是否允许有全文索引
+    RuleNotNullColumnType              string          必须为NOT NULL的字段
+    RuleNotNullColumnName              string          必须为NOT NULL 的字段名
+    RuleTextTypeColumnCount            int             text字段允许使用个数
+    RuleNeedIndexColumnName            string          必须有索引的字段名
+    RuleHaveColumnName                 string          必须包含的字段名
+    RuleNeedDefaultValue               bool            字段定义必须要有默认值
+    RuleNeedDefaultValueName           string          必须有默认值的字段名字
+    RuleAllowDropColumn                bool            是否允许删除字段
+    RuleAllowAfterClause               bool            是否允许 after 子句
+    RuleAllowChangeColumn              bool            是否允许 alter change 语句
+    RuleAllowDropIndex                 bool            是否允许删除索引
+    RuleAllowDropPrimaryKey            bool            是否允许删除主键
+    RuleAllowRenameIndex               bool            是否重命名索引
+    RuleAllowDropPartition             bool            是否允许删除分区
+    RuleIndexCount                     int             表的索引个数
+    RuleAllowDeleteManyTable           bool            是否允许DELETE多个表
+    RuleAllowDeleteHasJoin             bool            是否允许DELETE 表关联语句
+    RuleAllowDeleteHasSubClause        bool            是否允许DELETE 使用子句
+    RuleAllowDeleteNoWhere             bool            是否允许DELETE 没有WHERE
+    RuleAllowDeleteLimit               bool            是否允许 delete 使用 limit
+    RuleDeleteLessThan                 int             DELETE 行数限制
+    RuleAllowUpdateHasJoin             bool            是否允许 UPDATE 表关联语句
+    RuleAllowUpdateHasSubClause        bool            是否允许 UPDATE 使用子句
+    RuleAllowUpdateNoWhere             bool            是否允许 UPDATE 没有WHERE
+    RuleAllowUpdateLimit               bool            是否允许 UPDATE 使用 limit
+    RuleUpdateLessThan                 int             UPDATE 行数限制
+    RuleAllowInsertSelect              bool            是否允许insert select
+    RuleInsertRows                     int             insert每批数量
+    RuleAllowInsertNoColumn            bool            是否允许不指定字段
+    RuleAllowInsertIgnore              bool            是否允许 insert ignore
+    RuleAllowInsertReplace             bool            是否允许 replace into
+
+    ------------------------- 是否自定义, 自定义审核规则参数 -------------------------------
+    CustomRuleNameLength               bool            是否自定义, 通用名字长度
+    CustomRuleNameReg                  bool            是否自定义, 通用名字命名规则 正则规则: 以(字母/$/_)开头, 之后任意多个(字母/数字/_/$)
+    CustomRuleCharSet                  bool            是否自定义, 通用字符集检测
+    CustomRuleCollate                  bool            是否自定义, 通用 COLLATE
+    CustomRuleAllowCreateDatabase      bool            是否自定义, 是否允许创建数据库
+    CustomRuleAllowDropDatabase        bool            是否自定义, 是否允许删除数据库
+    CustomRuleAllowDropTable           bool            是否自定义, 是否允许删除表
+    CustomRuleAllowRenameTable         bool            是否自定义, 是否允许 rename table
+    CustomRuleAllowTruncateTable       bool            是否自定义, 是否允许 truncate table
+    CustomRuleTableEngine              bool            是否自定义, 允许的存储引擎
+    CustomRuleNotAllowColumnType       bool            是否自定义, 不允许使用的字段
+    CustomRuleNeedTableComment         bool            是否自定义, 表是否需要注释
+    CustomRuleNeedColumnComment        bool            是否自定义, 字段需要有注释
+    CustomRulePKAutoIncrement          bool            是否自定义, 主键自增
+    CustomRuleNeedPK                   bool            是否自定义, 必须要要有主键
+    CustomRuleIndexColumnCount         bool            是否自定义, 索引字段个数
+    CustomRuleTableNameReg             bool            是否自定义, 表名 命名规范
+    CustomRuleIndexNameReg             bool            是否自定义, 索引命名规范
+    CustomRuleUniqueIndexNameReg       bool            是否自定义, 唯一所有命名规范
+    CustomRuleAllColumnNotNull         bool            是否自定义, 所有字段都必须为 NOT NULL
+    CustomRuleAllowForeignKey          bool            是否自定义, 是否允许使用外键
+    CustomRuleAllowFullText            bool            是否自定义, 是否允许有全文索引
+    CustomRuleNotNullColumnType        bool            是否自定义, 必须为NOT NULL的字段
+    CustomRuleNotNullColumnName        bool            是否自定义, 必须为NOT NULL 的字段名
+    CustomRuleTextTypeColumnCount      bool            是否自定义, text字段允许使用个数
+    CustomRuleNeedIndexColumnName      bool            是否自定义, 必须有索引的字段名
+    CustomRuleHaveColumnName           bool            是否自定义, 必须包含的字段名
+    CustomRuleNeedDefaultValue         bool            是否自定义, 字段定义必须要有默认值
+    CustomRuleNeedDefaultValueName     bool            是否自定义, 必须有默认值的字段名字
+    CustomRuleAllowDropColumn          bool            是否自定义, 是否允许删除字段
+    CustomRuleAllowAfterClause         bool            是否自定义, 是否允许 after 子句
+    CustomRuleAllowChangeColumn        bool            是否自定义, 是否允许 alter change 语句
+    CustomRuleAllowDropIndex           bool            是否自定义, 是否允许删除索引
+    CustomRuleAllowDropPrimaryKey      bool            是否自定义, 是否允许删除主键
+    CustomRuleAllowRenameIndex         bool            是否自定义, 是否重命名索引
+    CustomRuleAllowDropPartition       bool            是否自定义, 是否允许删除分区
+    CustomRuleIndexCount               bool            是否自定义, 表的索引个数
+    CustomRuleAllowDeleteManyTable     bool            是否自定义, 是否允许DELETE多个表
+    CustomRuleAllowDeleteHasJoin       bool            是否自定义, 是否允许DELETE 表关联语句
+    CustomRuleAllowDeleteHasSubClause  bool            是否自定义, 是否允许DELETE 使用子句
+    CustomRuleAllowDeleteNoWhere       bool            是否自定义, 是否允许DELETE 没有WHERE
+    CustomRuleAllowDeleteLimit         bool            是否自定义, 是否允许 delete 使用 limit
+    CustomRuleDeleteLessThan           bool            是否自定义, DELETE 行数限制
+    CustomRuleAllowUpdateHasJoin       bool            是否自定义, 是否允许 UPDATE 表关联语句
+    CustomRuleAllowUpdateHasSubClause  bool            是否自定义, 是否允许 UPDATE 使用子句
+    CustomRuleAllowUpdateNoWhere       bool            是否自定义, 是否允许 UPDATE 没有WHERE
+    CustomRuleAllowUpdateLimit         bool            是否自定义, 是否允许 UPDATE 使用 limit
+    CustomRuleUpdateLessThan           bool            是否自定义, UPDATE 行数限制
+    CustomRuleAllowInsertSelect        bool            是否自定义, 是否允许insert select
+    CustomRuleInsertRows               bool            是否自定义, insert每批数量
+    CustomRuleAllowInsertNoColumn      bool            是否自定义, 是否允许不指定字段
+    CustomRuleAllowInsertIgnore        bool            是否自定义, 是否允许 insert ignore
+    CustomRuleAllowInsertReplace       bool            是否自定义, 是否允许 replace boolo
+`
 }

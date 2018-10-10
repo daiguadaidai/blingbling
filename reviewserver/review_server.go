@@ -18,7 +18,8 @@ func StartReviewServer(_httpServerConfig *config.HttpServerConfig, _wg *sync.Wai
 	defer _wg.Done()
 
 	// 添加路由
-	http.HandleFunc("/sqlReview", handle.SqlReviewHandle)
+	http.HandleFunc("/sqlReview", handle.SqlReviewHandle) // 审核
+	http.HandleFunc("/ClientParams", handle.ClientParamsHandle) // 客户端帮助参数
 
 	log.Infof("监听地址为: %v", _httpServerConfig.Address())
 	fmt.Printf("监听地址为: %v\n", _httpServerConfig.Address())
