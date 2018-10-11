@@ -2,6 +2,8 @@
 
 MySQL SQL 解析审核工具
 
+没错!!! 我的名字就是闪闪发亮的那个`blingbling`
+
 [TOC]
 
 ## 安装
@@ -182,6 +184,50 @@ tcp6       0      0 :::18080                :::*                    LISTEN      
 
 ## 客户端使用
 
+使用客户端访问时. 服务端会以JSON的格式返回相关审核结果. 如下返回结果
+
+```
+{
+    "Code":0,
+    "MSG":"",
+    "ReviewMSGs":[
+        {
+            "Sql":"alter table employees add column age1 int not null;",
+            "Code":2,
+            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+        }, {
+            "Sql":" delete from employees WHERE id = 1;",
+            "Code":1,
+            "MSG":"检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+        }
+    ]
+}
+```
+
+**参数解释**
+
+1. **Code:** 有3中值
+
+    - **0:** 审核程序成功执行
+
+    - **1:** 审核程序警告
+
+    - **2:** 审核程序失败
+
+2. **MSG:** 审核程序执行成功状态返回的信息
+
+3. **ReviewMSGs:** 所有审核程序, 当输入多个sql语句是, 则有多个审核消息.
+
+    - **Sql:** 审核的sql
+    
+    - **Code:** 审核代码: 
+
+        - **0:** 该`sql`审核通过
+
+        - **1:** (警告)该`sql`语法正确, 但是有一些无法无法确认的东西
+
+        - **2:** 该`sql`审核失败
+
 ### 可以指定的参数
 
 通过访问 `http://127.0.0.1:18080/ClientParams` 可以获取客户端可以指定的参数
@@ -319,8 +365,349 @@ curl http://127.0.0.1:18080/ClientParams
 > 如: 我需要自定义 `RuleNameLength=1000` 那么必须指定 `CustomRuleNameLength=1000` 不然将视为无效.
 > 这样使用自定参数是有点 `傻B` 但是感觉没办法 因为字符串默认值是:`""`, 数字是:`0`. 有些有值的参数. 在`new`一个对象的时候会被清空. 没有指定自定义值也会覆盖服务启动的默认值. 因此我这边使用显示指定是否使用自定义参数来做.
 
- 
- 
- 
-     
-     
+### CURL访问
+
+1. POST 请求
+
+```
+curl -X POST http://10.10.10.55:18080/sqlReview -d '{"Host":"10.10.10.21", "Port":3307, "Username":"root", "Password":"root", "Database":"employees", "Sqls":"alter table employees add column age1 int not null; delete from employees WHERE id = 1;"}'
+{
+    "Code":0,
+    "MSG":"",
+    "ReviewMSGs":[
+        {
+            "Sql":"alter table employees add column age1 int not null;",
+            "Code":2,
+            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+        }, {
+            "Sql":" delete from employees WHERE id = 1;",
+            "Code":1,
+            "MSG":"检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+        }
+    ]
+}
+```
+
+2. GET 请求
+
+由于在 GET 方法中使用分号(`;`), 一次性输入多个`sql`会导致`url`参数解析错误. 所以暂时就一个个来吧
+
+```
+curl "http://10.10.10.55:18080/sqlReview?Host=10.10.10.21&Port=3307&Username=HH&Password=oracle12&Database=employees&Sqls=alter%20table%20employees%20add%20column%20age1%20int%20not%20null"
+{
+    "Code":0,
+    "MSG":"",
+    "ReviewMSGs":[
+        {
+            "Sql":"alter table employees add column age1 int not null",
+            "Code":2,
+            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+        }
+    ]
+}
+```
+
+### Python 客户端使用
+
+只演示使用POST的方法
+
+```
+import requests
+
+data = {
+    'Host': '10.10.10.21',
+    'Port': 3307,
+    'Username': 'root',
+    'Password': 'root',
+    'Database': 'employees',
+    'Sqls': 'alter table employees add column age1 int not null; delete from employees WHERE id = 1;',
+}
+
+url = 'http://10.10.10.55:18080/sqlReview'
+
+r = requests.post(url, json = data)
+
+print(r.text)
+```
+
+### Golang 客户端使用
+
+只演示使用POST的方法
+
+```
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "bytes"
+    "net/http"
+    "github.com/daiguadaidai/blingbling/reviewer"
+    "github.com/liudng/godump"
+)
+
+func main() {
+    // 
+    params := make(map[string]interface{})
+    params["Host"] = "10.10.10.21"
+    params["Port"] = 3307
+    params["Username"] = "root"
+    params["Password"] = "root"
+    params["Database"] = "employees"
+    params["Sqls"] = "alter table employees add column age1 int not null; delete from employees WHERE id = 1;"
+
+    // Json
+    jsonParams, err := json.Marshal(params)
+    if err != nil {
+        fmt.Println(err.Error() )
+        return
+    }
+
+    // POST
+    reader := bytes.NewReader(jsonParams)
+    url := "http://10.10.10.55:18080/sqlReview"
+    request, err := http.NewRequest("POST", url, reader)
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+    request.Header.Set("Content-Type", "application/json;charset=UTF-8")
+
+    // 
+    client := http.Client{}
+    resp, err := client.Do(request)
+    if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+
+    respData := new(reviewer.ResponseReviewData)
+    err = json.NewDecoder(resp.Body).Decode(respData)
+    if err != nil {
+        fmt.Printf("json decode err: %v", err)
+        return
+    }
+
+    godump.Dump(respData)
+}
+```
+
+### Jquery Ajax 客户端
+
+只演示`POST`请求
+
+```
+<html>
+<head>
+    <script type="text/javascript" src="../js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            var url = 'http://10.10.10.55:18080/sqlReview';
+            var data = {
+                Host: '10.10.10.21',
+                Port: 3307,
+                Username: 'root',
+                Password: 'root',
+                Database: 'employees',
+                Sqls: 'alter table employees add column age1 int not null; delete from employees WHERE id = 1;'
+            };
+            $.ajax({
+                url: url,
+                contentType: "application/json; charset=utf-8",
+                type: 'POST',
+                data: JSON.stringify(data),
+                dataType: 'json',
+                success: function(data, textStatus, jqXHR){
+                    console.log(data);
+                    console.log(textStatus);
+                    console.log(jqXHR);
+                },
+                error: function(xhr,textStatus){
+                    console.log('错误');
+                    console.log(xhr);
+                    console.log(textStatus);
+                },
+            })
+        });
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
+```
+
+### VUE RESOURCE 客户端
+
+只演示`POST`请求
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="../js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../js/vue-2.1.8.min.js"></script>
+    <script type="text/javascript" src="../js/vue-resource-1.5.1.min.js"></script>
+</head>
+<body>
+
+<div id="app">
+    <input type="submit" value="sql" @click="sqlReview()">
+    <hr />
+    {{ reviewData }}
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            reviewData: ""
+        },
+        methods: {
+            sqlReview: function() {
+                var url = 'http://10.10.10.55:18080/sqlReview';
+                var data = {
+                    Host: '10.10.10.21',
+                    Port: 3307,
+                    Username: 'root',
+                    Password: 'root',
+                    Database: 'employees',
+                    Sqls: 'alter table employees add column age1 int not null; delete from employees WHERE id = 1;'
+                };
+                this.$http.post(
+                    url,
+                    JSON.stringify(data),
+                    {emulateJSON: true}
+                ).then(
+                    (response)=>{
+                        console.log(response);
+                        this.reviewData = response.data;
+                    },
+                    (error)=>{
+                        console.log(error);
+                    }
+                );
+            }
+        }
+    })
+</script>
+</body>
+</html>
+```
+
+### axios 客户端
+
+只演示`POST`请求
+
+```
+<html>
+<head>
+    <script type="text/javascript" src="../js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../js/axios.min.js"></script>
+</head>
+
+<body>
+
+<div>
+    <button id="sql-review">审核sql</button>
+    <hr />
+    <div id="review-data"></div>
+</div>
+
+</body>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#sql-review").click(function() {
+            sqlReview();
+        });
+    });
+
+    function sqlReview() {
+        var url = 'http://10.10.10.55:18080/sqlReview';
+        var reviewData = {
+            Host: '10.10.10.21',
+            Port: 3307,
+            Username: 'root',
+            Password: 'root',
+            Database: 'employees',
+            Sqls: 'alter table employees add column age1 int not null; delete from employees WHERE id = 1;'
+        };
+        axios({
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            transformRequest: [function(data) {
+                data = JSON.stringify(data)
+                return data
+            }],
+            url: url,
+            method: 'post',
+            params: {},
+            data: reviewData
+        }).then(function (response) {
+            $("#review-data").html(JSON.stringify(response.data));
+            console.log(response.data);
+        }).catch(function (error) {
+            console.log(error);
+        });
+    }
+</script>
+</html>
+```
+
+### 高级玩法
+
+其实也没有那么高级, 无非就是搞搞自定义参数
+
+下面就以 `python` 的使用方法来做演示. 其他客户端使用的方法大同小异.
+
+演示添加字段, 必须以下划线(`_`)开头, 其他的按正则的规范.
+
+```
+import requests
+
+data = {
+    'Host': '10.10.10.21',
+    'Port': 3307,
+    'Username': 'root',
+    'Password': 'root',
+    'Database': 'employees',
+    'Sqls': 'alter table employees add column age1 int not null comment "年龄"',
+    'CustomRuleNameReg': True,
+    'RuleNameReg': '^_[a-z\$_][a-z\$\d_]*$',
+}
+
+url = 'http://10.10.10.55:18080/sqlReview'
+
+r = requests.post(url, json = data)
+
+print(r.text)
+# 输出
+{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column age1 int not null comment \"年龄\"","Code":2,"MSG":"字段名 检测失败. 命名规则: ^_[a-z\\$_][a-z\\$\\d_]*$. 名称: age1, "}]}
+
+
+# 将sql语句该为以下划线(_)命名的将审核通过
+data['Sqls'] = 'alter table employees add column _age1 int not null comment "年龄"'
+r = requests.post(url, json = data)
+print(r.text)
+# 输出
+{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","Code":0,"MSG":"审核成功!"}]}
+```
+
+> **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数**必须**是同时出现的.
+> 千万别只出现了`CustomRuleNameReg=True`而`RuleNameReg`不设置值. 这样的后果是会使用`Golang`的字符串的默认值. 审核的时候将会遇到奇葩结果.
+
+
+
+
+
+
+
+
+
+
+
+
