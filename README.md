@@ -476,14 +476,14 @@ func main() {
     params["Database"] = "employees"
     params["Sqls"] = "alter table employees add column age1 int not null; delete from employees WHERE id = 1;"
 
-    // Json
+    // 将参数转化为Json
     jsonParams, err := json.Marshal(params)
     if err != nil {
         fmt.Println(err.Error() )
         return
     }
 
-    // POST
+    // 设置POST请求参数
     reader := bytes.NewReader(jsonParams)
     url := "http://10.10.10.55:18080/sqlReview"
     request, err := http.NewRequest("POST", url, reader)
@@ -493,7 +493,7 @@ func main() {
     }
     request.Header.Set("Content-Type", "application/json;charset=UTF-8")
 
-    // 
+    // 执行
     client := http.Client{}
     resp, err := client.Do(request)
     if err != nil {
@@ -501,6 +501,7 @@ func main() {
         return
     }
 
+    // 获取指定返回值
     respData := new(reviewer.ResponseReviewData)
     err = json.NewDecoder(resp.Body).Decode(respData)
     if err != nil {
