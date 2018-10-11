@@ -4,7 +4,31 @@ MySQL SQL 解析审核工具
 
 没错!!! 我的名字就是闪闪发亮的那个`blingbling`
 
-[TOC]
+- [安装](#安装)
+
+- [启动和参数介绍](#启动和参数介绍)
+
+    - [--help](#--help)
+    
+    - [启动](#启动)
+    
+    - [检测是否启动](#检测是否启动)
+    
+- [客户端使用](#客户端使用)
+
+    - [可以指定的参数](#可以指定的参数)
+    
+    - [CURL访问](#CURL访问)
+    
+    - [Python客户端使用](#Python客户端使用)
+    
+    - [Golang客户端使用](#Golang客户端使用)
+    
+    - [Jquery-Ajax客户端](#Jquery-Ajax客户端)
+    
+    - [VUE-RESOURCE客户端](#VUE-RESOURCE客户端)
+    
+    - [axios客户端](#axios客户端)
 
 ## 安装
 
@@ -697,7 +721,7 @@ print(r.text)
 {"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","Code":0,"MSG":"审核成功!"}]}
 ```
 
-> **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数**必须**是同时出现的.
+> **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数--必须--是同时出现的.
 > 千万别只出现了`CustomRuleNameReg=True`而`RuleNameReg`不设置值. 这样的后果是会使用`Golang`的字符串的默认值. 审核的时候将会遇到奇葩结果.
 
 
