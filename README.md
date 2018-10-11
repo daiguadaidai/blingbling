@@ -5,30 +5,24 @@ MySQL SQL 解析审核工具
 没错!!! 我的名字就是闪闪发亮的那个`blingbling`
 
 - [安装](#安装)
-
 - [启动和参数介绍](#启动和参数介绍)
-
     - [--help](#--help)
-    
     - [启动](#启动)
-    
     - [检测是否启动](#检测是否启动)
-    
 - [客户端使用](#客户端使用)
-
     - [可以指定的参数](#可以指定的参数)
-    
     - [CURL访问](#CURL访问)
-    
     - [Python客户端使用](#Python客户端使用)
-    
     - [Golang客户端使用](#Golang客户端使用)
-    
     - [Jquery-Ajax客户端](#Jquery-Ajax客户端)
-    
     - [VUE-RESOURCE客户端](#VUE-RESOURCE客户端)
-    
     - [axios客户端](#axios客户端)
+- [高级玩法](#高级玩法)
+- [supervisor管理进程](#supervisor管理进程)
+    - [基本使用方法](#基本使用方法)
+    - [主要的配置](主要的配置)
+    - [启动supervisor](#启动supervisor)
+    - [小兴趣](#小兴趣)
 
 ## 安装
 
@@ -207,6 +201,8 @@ tcp6       0      0 :::18080                :::*                    LISTEN      
 ``` 
 
 ## 客户端使用
+
+各种程序是如何使用的, 在下面都有实例. 相关的程序在项目中的`client_sample`目录里面都能够找的到.
 
 使用客户端访问时. 服务端会以JSON的格式返回相关审核结果. 如下返回结果
 
@@ -724,12 +720,107 @@ print(r.text)
 > **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数--必须--是同时出现的.
 > 千万别只出现了`CustomRuleNameReg=True`而`RuleNameReg`不设置值. 这样的后果是会使用`Golang`的字符串的默认值. 审核的时候将会遇到奇葩结果.
 
+## supervisor管理进程
 
+`supervisor`可以很好的管理你的进程. 自己就不必再写一个相关守护进程的东西了. 为他点给赞.
 
+如何安装的我就不说了. 请自行去`百度`, `google`, `bing`
 
+### 基本使用方法
 
+先搞一波基本使用的语法, 在`supervisor`文件夹下面有一个配置文件
 
+```
+# 指定配置文件启动
+supervisord -c /u01/supervisor/supervisor.conf
+# 停止 supervisord
+supervisorctl shutdown
+# 重新加载配置文件
+supervisorctl reload
+# 启动所有进程
+supervisorctl start all
+# 停止所有进程
+supervisorctl stop all
+# 启动某个进程
+supervisorctl start program-name
+# 停止某个进程
+supervisorctl stop program-name
+# 重启所有进程或所有进程
+supervisorctl restart all
+supervisorctl reatart program-name
+# 查看supervisord当前管理的所有进程的状态
+supervisorctl status
+```
 
+### 主要的配置
+
+下面列出了主要的一些配置, 配置的注释使用分号开头(`;`).
+
+大家需要注意看的主要是`[program:blingbling]`这个模块的东西, 该模块主要是指定了管理程序的名称是什么, 这边我们写的程序名称是`blingbling`.
+
+其他的参数主要大家主要应该要修改一些目录相关的东西
+
+```
+[unix_http_server]
+file=/u01/supervisor/supervisor.sock   ; the path to the socket file
+
+[inet_http_server]         ; inet (TCP) server disabled by default
+port=127.0.0.1:9001        ; ip_address:port specifier, *:port for all iface
+
+[supervisord]
+logfile=/u01/supervisor/supervisord.log ; main log file; default $CWD/supervisord.log
+logfile_maxbytes=50MB        ; max main logfile bytes b4 rotation; default 50MB
+logfile_backups=10           ; # of main logfile backups; 0 means none, default 10
+loglevel=info                ; log level; default info; others: debug,warn,trace
+pidfile=/u01/supervisor/supervisord.pid ; supervisord pidfile; default supervisord.pid
+nodaemon=false               ; start in foreground if true; default false
+minfds=1024                  ; min. avail startup file descriptors; default 1024
+minprocs=200                 ; min. avail process descriptors;default 200
+
+[supervisorctl]
+serverurl=unix:///u01/supervisor/supervisor.sock ; use a unix:// URL  for a unix socket
+
+[program:blingbling]
+command=/u01/supervisor/blingbling/bin/blingbling    ; the program (relative uses PATH, can take args)
+process_name=%(program_name)s                        ; process_name expr (default %(program_name)s)
+numprocs=1                                           ; number of processes copies to start (def 1)
+directory=/u01/supervisor/blingbling/log             ; directory to cwd to before exec (def no cwd)
+user=root                                            ; setuid to this UNIX account to run the program
+autostart=true
+autorestart=true
+startsecs=5
+startretries=3
+redirect_stderr=true
+stdout_logfile=/u01/supervisor/blingbling/log/gen_blingbling.log
+stdout_logfile_maxbytes=100MB
+stdout_logfile_backups=10
+stderr_logfile=/u01/supervisor/blingbling/log/err_blingbling.log
+stderr_logfile_maxbytes=100MB
+stderr_logfile_backups=10
+stopasgroup=true
+```
+
+### 启动supervisor
+
+启动查看`supervisor`, 并且查看`blingbling`是否自动启动
+
+```
+ps -ef | grep blingbling
+
+supervisord -c /u01/supervisor/supervisor.conf
+
+ps -ef | grep supervisor
+root      6406     1  0 22:42 ?        00:00:00 /usr/bin/python /usr/local/bin/supervisord -c /u01/supervisor/supervisor.conf
+root      6407  6406  0 22:42 ?        00:00:00 /u01/supervisor/blingbling/bin/blingbling
+```
+
+上面可以看到`blingbling`被supervisor拉起来了. 可以观察进程`pid`
+
+### 小兴趣
+
+有兴趣的朋友可以将启动的`blingbling``kill`掉. 再次查看`blingbling`的进程. 发现`blingbling重启了`.
+
+要想停止`blingbling`可以使用`supervisorctl stop blingbling`命令
 
 
 
