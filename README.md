@@ -818,11 +818,6 @@ root      6407  6406  0 22:42 ?        00:00:00 /u01/supervisor/blingbling/bin/b
 
 ### 小兴趣
 
-有兴趣的朋友可以将启动的`blingbling``kill`掉. 再次查看`blingbling`的进程. 发现`blingbling重启了`.
+有兴趣的朋友可以将启动的`blingbling kill`掉. 再次查看`blingbling`的进程. 发现`blingbling重启了`.
 
 要想停止`blingbling`可以使用`supervisorctl stop blingbling`命令
-
-
-
-
-
