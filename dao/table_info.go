@@ -69,8 +69,6 @@ func (this *TableInfo) DatabaseExistsByName(_dbName string) (bool, error) {
     WHERE SCHEMA_NAME = ?;
     `
 
-    fmt.Println(sql)
-
 	var count int
 	err := this.Instance.DB.QueryRow(sql, _dbName).Scan(&count)
 	if count > 0 {
