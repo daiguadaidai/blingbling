@@ -93,7 +93,7 @@ Usage:
 Flags:
   -h, --help                                  help for blingbling
       --listen-host string                    通用名称匹配规则 (default "0.0.0.0")
-      --listen-port int                       启动服务使用的端口 (default 18080)
+      --listen-port int                       启动服务使用的端口 (default 19527)
       --rule-all-column-not-null              是否所有字段. 默认: false
       --rule-allow-after-clause               是否允许after子句. 默认: true (default true)
       --rule-allow-change-column              是否允许Alter Change子句. 默认: true (default true)
@@ -168,7 +168,7 @@ Flags:
 ```
 ./blingbling \
     --listen-host=0.0.0.0 \
-    --listen-port=18080 \
+    --listen-port=19527 \
     --rule-name-length=100 \
     --rule-name-reg="^[a-zA-Z\$_][a-zA-Z\$\d_]*$" \
     --rule-charset="utf8,utf8mb4" \
@@ -188,7 +188,7 @@ Flags:
 
 ### 检测是否启动
 
-检测启动方法可以通过 `ps -ef | grep blingbling` 查看, 也可以使用`netstat -natpl | grep 18080`查看
+检测启动方法可以通过 `ps -ef | grep blingbling` 查看, 也可以使用`netstat -natpl | grep 19527`查看
 
 ```
 # ps 方法查看
@@ -196,8 +196,8 @@ ps -ef | grep blingbling
 hh       11943  7909  0 20:15 pts/3    00:00:00 ./blingbling
 
 # netstat 方法查看
-netstat -natpl | grep 18080
-tcp6       0      0 :::18080                :::*                    LISTEN      11943/blingbling
+netstat -natpl | grep 19527
+tcp6       0      0 :::19527                :::*                    LISTEN      11943/blingbling
 ``` 
 
 ## 客户端使用
@@ -250,10 +250,10 @@ tcp6       0      0 :::18080                :::*                    LISTEN      
 
 ### 可以指定的参数
 
-通过访问 `http://127.0.0.1:18080/ClientParams` 可以获取客户端可以指定的参数
+通过访问 `http://127.0.0.1:19527/ClientParams` 可以获取客户端可以指定的参数
 
 ```
-curl http://127.0.0.1:18080/ClientParams
+curl http://127.0.0.1:19527/ClientParams
 
     可选参数                           参数类型         干什么用的
     ------------------------ 需要审核的数据库相关参数 --------------------------
@@ -390,7 +390,7 @@ curl http://127.0.0.1:18080/ClientParams
 1. POST 请求
 
 ```
-curl -X POST http://10.10.10.55:18080/sqlReview -d '{"Host":"10.10.10.21", "Port":3307, "Username":"root", "Password":"root", "Database":"employees", "Sqls":"alter table employees add column age1 int not null; delete from employees WHERE id = 1;"}'
+curl -X POST http://10.10.10.55:19527/sqlReview -d '{"Host":"10.10.10.21", "Port":3307, "Username":"root", "Password":"root", "Database":"employees", "Sqls":"alter table employees add column age1 int not null; delete from employees WHERE id = 1;"}'
 {
     "Code":0,
     "MSG":"",
@@ -413,7 +413,7 @@ curl -X POST http://10.10.10.55:18080/sqlReview -d '{"Host":"10.10.10.21", "Port
 由于在 GET 方法中使用分号(`;`), 一次性输入多个`sql`会导致`url`参数解析错误. 所以暂时就一个个来吧
 
 ```
-curl "http://10.10.10.55:18080/sqlReview?Host=10.10.10.21&Port=3307&Username=HH&Password=oracle12&Database=employees&Sqls=alter%20table%20employees%20add%20column%20age1%20int%20not%20null"
+curl "http://10.10.10.55:19527/sqlReview?Host=10.10.10.21&Port=3307&Username=HH&Password=oracle12&Database=employees&Sqls=alter%20table%20employees%20add%20column%20age1%20int%20not%20null"
 {
     "Code":0,
     "MSG":"",
@@ -443,7 +443,7 @@ data = {
     'Sqls': 'alter table employees add column age1 int not null; delete from employees WHERE id = 1;',
 }
 
-url = 'http://10.10.10.55:18080/sqlReview'
+url = 'http://10.10.10.55:19527/sqlReview'
 
 r = requests.post(url, json = data)
 
@@ -485,7 +485,7 @@ func main() {
 
     // 设置POST请求参数
     reader := bytes.NewReader(jsonParams)
-    url := "http://10.10.10.55:18080/sqlReview"
+    url := "http://10.10.10.55:19527/sqlReview"
     request, err := http.NewRequest("POST", url, reader)
     if err != nil {
         fmt.Println(err.Error())
@@ -523,7 +523,7 @@ func main() {
     <script type="text/javascript" src="../js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            var url = 'http://10.10.10.55:18080/sqlReview';
+            var url = 'http://10.10.10.55:19527/sqlReview';
             var data = {
                 Host: '10.10.10.21',
                 Port: 3307,
@@ -588,7 +588,7 @@ func main() {
         },
         methods: {
             sqlReview: function() {
-                var url = 'http://10.10.10.55:18080/sqlReview';
+                var url = 'http://10.10.10.55:19527/sqlReview';
                 var data = {
                     Host: '10.10.10.21',
                     Port: 3307,
@@ -647,7 +647,7 @@ func main() {
     });
 
     function sqlReview() {
-        var url = 'http://10.10.10.55:18080/sqlReview';
+        var url = 'http://10.10.10.55:19527/sqlReview';
         var reviewData = {
             Host: '10.10.10.21',
             Port: 3307,
@@ -701,7 +701,7 @@ data = {
     'RuleNameReg': '^_[a-z\$_][a-z\$\d_]*$',
 }
 
-url = 'http://10.10.10.55:18080/sqlReview'
+url = 'http://10.10.10.55:19527/sqlReview'
 
 r = requests.post(url, json = data)
 

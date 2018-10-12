@@ -4,7 +4,7 @@ import "fmt"
 
 const (
 	HTTP_SERVER_LISTEN_HOST = "0.0.0.0"
-	HTTP_SERVER_LISTEN_PORT = 18080
+	HTTP_SERVER_LISTEN_PORT = 19527
 )
 
 type HttpServerConfig struct {

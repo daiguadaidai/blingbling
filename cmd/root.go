@@ -34,6 +34,8 @@ var rootCmd = &cobra.Command{
     一款SQL审核工具, 主要用于MySQL SQL 相关审核. 启动工具后会提供一个http接口为用户实时链接并且审核相关SQL.
     启动工具:
     ./blingbling \
+        --listen-host=0.0.0.0 \
+        --listen-port=19527 \
         --rule-name-length=100 \
         --rule-name-reg="^[a-zA-Z\$_][a-zA-Z\$\d_]*$" \
         --rule-charset="utf8,utf8mb4" \
