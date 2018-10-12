@@ -662,6 +662,8 @@ func (this *AlterTableReviewer) DetectDropPrimaryKey(_spec *ast.AlterTableSpec) 
 		return reviewMSG
 	}
 
+	this.IsDropPrimaryKey = true
+
 	return reviewMSG
 }
 
@@ -937,8 +939,8 @@ func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *dao.TableInfo) 
 
 	// 检测主键相关
 	if len(this.PKColumnNames) > 0 {
-		// 检测主键是否有重复定义
-		if len(_tableInfo.PKColumnNameList) > 0 {
+		// 检测主键是否有重复定义, 并且该alter语句没有删除主键语句
+		if len(_tableInfo.PKColumnNameList) > 0 && !this.IsDropPrimaryKey {
 			reviewMSG = new(ReviewMSG)
 			reviewMSG.MSG = fmt.Sprintf("检测失败. 表: %v. 主键已经存在.",
 				this.StmtNode.Table.Name.String())
