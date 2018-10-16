@@ -44,6 +44,16 @@ func (this *DeleteVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 			this.HasWhereClause = true
 			this.StmtBlockType = BINARY_OPERATON_EXPR
 		}
+	case *ast.PatternInExpr:
+		if this.SubClauseLevel == 0 && this.StmtBlockType == DELETE_TABLE_LIST {
+			this.HasWhereClause = true
+			this.StmtBlockType = BINARY_OPERATON_EXPR
+		}
+	case *ast.BetweenExpr:
+		if this.SubClauseLevel == 0 && this.StmtBlockType == DELETE_TABLE_LIST {
+			this.HasWhereClause = true
+			this.StmtBlockType = BINARY_OPERATON_EXPR
+		}
 	case *ast.DeleteTableList:
 		this.StmtBlockType = DELETE_TABLE_LIST
 		if stmt != nil {
