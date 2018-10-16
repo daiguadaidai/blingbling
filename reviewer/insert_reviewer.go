@@ -239,7 +239,7 @@ func (this *InsertReviewer) DetectColumnExists(_tableInfo *dao.TableInfo) *Revie
 		if _, ok := _tableInfo.ColumnNameMap[column.Name.String()]; !ok {
 			reviewMSG = new(ReviewMSG)
 			reviewMSG.Code = REVIEW_CODE_ERROR
-			reviewMSG.MSG = fmt.Sprintf("警告: Insert 指定的字段[%v]不存在", column.Name.String())
+			reviewMSG.MSG = fmt.Sprintf("警告: Insert 指定的字段 %v 不存在", column.Name.String())
 			return reviewMSG
 		}
 	}

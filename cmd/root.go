@@ -96,7 +96,7 @@ func init() {
 		fmt.Sprintf("是否允许truncate表, 默认: %v", config.RULE_ALLOW_TRUNCATE_TABLE))
 	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-table-engine",
 		config.RULE_TABLE_ENGINE, "允许的存储引擎 默认(多个用逗号隔开)")
-	rootCmd.Flags().StringVar(&runConfig.RuleTableEngine, "rule-not-allow-column-type",
+	rootCmd.Flags().StringVar(&runConfig.RuleNotAllowColumnType, "rule-not-allow-column-type",
 		config.RULE_NOT_ALLOW_COLUMN_TYPE,
 		"不允许的字段类型, 至此的类型: " +
 		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +

@@ -258,3 +258,73 @@ UpdaTe employees sEt birth_date = '2018-01-01' where emp_no = 10001
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
 	}
 }
+
+func TestUpdateReviewer_Review_WhereIn(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+
+	sql := `
+UPDATE t1
+SET expired_at = '1531374086000'
+WHERE id IN (
+    29145, 33493, 33484, 29674, 29516, 33942, 33953, 33947, 38229,
+    37757, 36089, 33492, 33483, 33750, 51106, 51105, 51107, 82857,
+    59968, 55822, 42854, 42853
+);
+    `
+	fmt.Sprintf(sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+
+		updateReview := review.(*UpdateReviewer)
+		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
+	}
+}
+
+func TestUpdateReviewer_Review_WhereBetween(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+
+	sql := `
+UPDATE t1
+SET expired_at = '1531374086000'
+WHERE id between 1 and 10;
+    `
+	fmt.Sprintf(sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+
+		updateReview := review.(*UpdateReviewer)
+		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
+	}
+}

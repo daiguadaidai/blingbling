@@ -10,6 +10,7 @@ import (
 	"crypto/md5"
 	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/juju/errors"
+	"github.com/daiguadaidai/blingbling/common"
 )
 
 /* 检测名称长度是否合法
@@ -270,8 +271,7 @@ func DetectDatabaseExistsByName(_tableInfo *dao.TableInfo, _dbName string) *Revi
 	if exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]已经存在.",
-			_tableInfo.DBName)
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库 %v 已经存在.", _dbName)
 		return reviewMSG
 	}
 
@@ -297,8 +297,7 @@ func DetectDatabaseNotExistsByName(_tableInfo *dao.TableInfo, _dbName string) *R
 	if !exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库[%v]已经存在.",
-			_tableInfo.DBName)
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库 %v 不存在.",_dbName)
 		return reviewMSG
 	}
 
@@ -325,8 +324,7 @@ func DetectTableExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName stri
 	if exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]已经存在.",
-			_tableInfo.TableName)
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表 %v 已经存在.", _tableName)
 		return reviewMSG
 	}
 
@@ -352,8 +350,7 @@ func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName s
 	if !exists {
 		reviewMSG = new(ReviewMSG)
 		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表[%v]已经存在.",
-			_tableInfo.TableName)
+		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表 %v 不存在.", _tableName)
 		return reviewMSG
 	}
 
@@ -431,4 +428,15 @@ func GetExplainSelectSqlByUpdateSql(
 	explainSelectSql = fmt.Sprintf("%v where %v", explainSelectSuffix, explainSelectWhere)
 
 	return explainSelectSql, nil
+}
+
+/* 匹配是否是 create table like 语句
+Params:
+    _sql: 建表语句
+*/
+func IsCreateTableLikeStmt(_sql string) bool {
+	// reg := fmt.Sprintf(`(?i)\s*CREATE\s*TABLE\s*[%v\w\d_]+\s*LIKE\s*[%v\w\d_;]+`, "`", "`")
+	reg := fmt.Sprintf(`(?i)^\s*CREATE\s*TABLE\s*[0-9a-z_%s\.]+\s*LIKE\s*[0-9a-z_%s\.]+\s*;?\s*$`, "`")
+
+	return common.StrIsMatch(_sql, reg)
 }

@@ -2,6 +2,7 @@ package reviewer
 
 import (
 	"github.com/daiguadaidai/blingbling/ast"
+	"fmt"
 )
 
 type UpdateVisitor struct{
@@ -31,7 +32,7 @@ func NewUpdateVisitor() *UpdateVisitor {
 }
 
 func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
-	// fmt.Printf("Enter: %T, %[1]v\n", in)
+	fmt.Printf("Enter: %T, %[1]v\n", in)
 
 	// 解析和设置正在解析的语句块是哪块
 	switch stmt := in.(type) {
@@ -52,6 +53,16 @@ func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 				this.SetSubClauseLevelMeetFirstWhere[this.SetSubClauseCount] = true
 				this.SetSubClauseWhereCount ++
 			}
+		}
+	case *ast.PatternInExpr:
+		if this.SubClauseLevel == 0 && this.StmtBlockType == ASSIGNMENT && !this.IsInSetClause { // update where语句
+			this.HasWhereClause = true
+			this.StmtBlockType = BINARY_OPERATON_EXPR
+		}
+	case *ast.BetweenExpr:
+		if this.SubClauseLevel == 0 && this.StmtBlockType == ASSIGNMENT && !this.IsInSetClause { // update where语句
+			this.HasWhereClause = true
+			this.StmtBlockType = BINARY_OPERATON_EXPR
 		}
 	case *ast.Assignment:
 		if this.StmtBlockType != ASSIGNMENT {

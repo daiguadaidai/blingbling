@@ -94,6 +94,94 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
+	// 判断是否是 create table like语句
+	if IsCreateTableLikeStmt(this.StmtNode.Text()) {
+		// 检测 create table like 语句
+		reviewMSG = this.DetectCreateTableLike()
+		if reviewMSG != nil {
+			reviewMSG.Code = REVIEW_CODE_ERROR
+			return reviewMSG
+		}
+	} else {
+		// 非 create table like语句
+		reviewMSG = this.DetectNoCreateTableLike()
+		if reviewMSG != nil {
+			reviewMSG.Code = REVIEW_CODE_ERROR
+			return reviewMSG
+		}
+	}
+
+
+	// 能走到这里说明写的语句审核成功
+	reviewMSG = new(ReviewMSG)
+	reviewMSG.Code = REVIEW_CODE_SUCCESS
+	reviewMSG.MSG = "审核成功"
+
+	return reviewMSG
+}
+
+// 检测数据库名长度
+func (this *CreateTableReviewer) DetectDBNameLength(_name string) *ReviewMSG {
+	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+}
+
+// 检测数据库命名规范
+func (this *CreateTableReviewer) DetectDBNameReg(_name string) *ReviewMSG {
+	return DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
+}
+
+// 检测表名长度
+func (this *CreateTableReviewer) DetectTableNameLength(_name string) *ReviewMSG {
+	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+}
+
+// 检测表命名规范
+func (this *CreateTableReviewer) DetectTableNameReg(_name string) *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	reviewMSG = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
+	if reviewMSG != nil {
+		reviewMSG.MSG = fmt.Sprintf("检测失败. %v 表名: %v",
+			fmt.Sprintf(config.MSG_TABLE_NAME_GRE_ERROR, this.ReviewConfig.RuleTableNameReg),
+			_name)
+	}
+
+	return reviewMSG
+}
+
+// 检测create table like相关操作
+func (this *CreateTableReviewer) DetectCreateTableLike() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
+	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	err := tableInfo.OpenInstance()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
+		return reviewMSG
+	}
+
+	// 检测 create table like 的原表是否不存在
+	reviewMSG = DetectTableNotExistsByName(tableInfo, this.StmtNode.ReferTable.Schema.String(),
+		this.StmtNode.ReferTable.Name.String())
+	if reviewMSG != nil {
+		return CloseTableInstance(reviewMSG, tableInfo)
+	}
+
+	// 检测需要新建的表是否存在
+	reviewMSG = DetectTableExistsByName(tableInfo, this.SchemaName, this.StmtNode.Table.Name.String())
+	if reviewMSG != nil {
+		return CloseTableInstance(reviewMSG, tableInfo)
+	}
+
+	return CloseTableInstance(reviewMSG, tableInfo)
+}
+
+// 检测不是create table like语句的相关信息
+func (this *CreateTableReviewer) DetectNoCreateTableLike() *ReviewMSG {
+	var reviewMSG *ReviewMSG
+
 	// 检测建表选项
 	reviewMSG = this.DetectTableOptions()
 	if reviewMSG != nil {
@@ -198,41 +286,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 		return reviewMSG
 	}
 
-
-	// 能走到这里说明写的语句审核成功
-	reviewMSG = new(ReviewMSG)
-	reviewMSG.Code = REVIEW_CODE_SUCCESS
-	reviewMSG.MSG = "审核成功"
-
-	return reviewMSG
-}
-
-// 检测数据库名长度
-func (this *CreateTableReviewer) DetectDBNameLength(_name string) *ReviewMSG {
-	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
-}
-
-// 检测数据库命名规范
-func (this *CreateTableReviewer) DetectDBNameReg(_name string) *ReviewMSG {
-	return DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
-}
-
-// 检测表名长度
-func (this *CreateTableReviewer) DetectTableNameLength(_name string) *ReviewMSG {
-	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
-}
-
-// 检测表命名规范
-func (this *CreateTableReviewer) DetectTableNameReg(_name string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
-	reviewMSG = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
-	if reviewMSG != nil {
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v 表名: %v",
-			fmt.Sprintf(config.MSG_TABLE_NAME_GRE_ERROR, this.ReviewConfig.RuleTableNameReg),
-			_name)
-	}
-
 	return reviewMSG
 }
 
@@ -256,7 +309,7 @@ func (this *CreateTableReviewer) DetectTableOptions() *ReviewMSG {
 		}
 		// 一检测到有问题键停止下面检测, 返回检测错误值
 		if reviewMSG != nil {
-			break
+			return reviewMSG
 		}
 	}
 
