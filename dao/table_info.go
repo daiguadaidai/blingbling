@@ -86,6 +86,10 @@ Params:
     _tableName: 表名称
  */
 func (this *TableInfo) TableExistsByName(_dbName, _tableName string) (bool, error) {
+	if _dbName == "" {
+		_dbName = this.Instance.DBconfig.Database
+	}
+
 	sql := `
         SELECT COUNT(*)
         FROM information_schema.TABLES

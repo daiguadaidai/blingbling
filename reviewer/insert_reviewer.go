@@ -219,13 +219,22 @@ func (this *InsertReviewer) DetectFromInstance() *ReviewMSG {
 	}
 	CloseTableInstance(nil, tableInfo) // 该查询数据库的地方已经完成, 关闭相关链接
 
+	err = tableInfo.ParseCreateTableInfo()
+	if err != nil {
+		reviewMSG = new(ReviewMSG)
+		reviewMSG.Code = REVIEW_CODE_WARNING
+		reviewMSG.MSG = fmt.Sprintf("警告: 该Insert语法正确. 解析原表建表语句错误. 无法对比" +
+			"%v", err)
+		return reviewMSG
+	}
+
 	// 检测字段是否存在
 	reviewMSG = this.DetectColumnExists(tableInfo)
 	if reviewMSG != nil {
-		return CloseTableInstance(reviewMSG, tableInfo)
+		return reviewMSG
 	}
 
-	return CloseTableInstance(reviewMSG, tableInfo)
+	return reviewMSG
 }
 
 /* 检测字段是否存在
