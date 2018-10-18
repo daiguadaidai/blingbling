@@ -59,8 +59,11 @@ func (this *CreateDatabaseReviewer) Review() *ReviewMSG {
 func (this *CreateDatabaseReviewer) DetectDBNameLength() (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameLength(this.StmtNode.Name, this.ReviewConfig.RuleNameLength)
-	msg = fmt.Sprintf("%v. 数据库: %v", msg, this.StmtNode.Name)
-	this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError {
+		msg = fmt.Sprintf("%v. 数据库: %v", msg, this.StmtNode.Name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
 	return
 }
 
@@ -68,8 +71,11 @@ func (this *CreateDatabaseReviewer) DetectDBNameLength() (haveError bool) {
 func (this *CreateDatabaseReviewer) DetectDBNameReg() (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameReg(this.StmtNode.Name, this.ReviewConfig.RuleNameReg)
-	msg = fmt.Sprintf("%v. 数据库: %v", msg, this.StmtNode.Name)
-	this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError {
+		msg = fmt.Sprintf("%v. 数据库: %v", msg, this.StmtNode.Name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
 	return
 }
 

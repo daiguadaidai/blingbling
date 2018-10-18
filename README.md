@@ -34,6 +34,8 @@ git clone git@github.com:daiguadaidai/blingbling.git
 
 2. 编译生成`go`语法解析文件
 
+我使用的`Golang`版本是:`1.9.2`
+
 由于该工具用到了`yacc`, `lex`进行sql语法解析, 因此需要先使用相关工具解析相关语法成为`go`能识别的语法
 
 ```

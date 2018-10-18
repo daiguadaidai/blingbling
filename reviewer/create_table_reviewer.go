@@ -112,8 +112,11 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 func (this *CreateTableReviewer) DetectDBNameLength(_name string) (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
-	msg = fmt.Sprintf("%v 数据库: %v", msg, _name)
-	this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError {
+		msg = fmt.Sprintf("%v 数据库: %v", msg, _name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
 	return
 }
 
@@ -121,8 +124,11 @@ func (this *CreateTableReviewer) DetectDBNameLength(_name string) (haveError boo
 func (this *CreateTableReviewer) DetectDBNameReg(_name string) (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
-	msg = fmt.Sprintf("%v 数据库: %v", msg, _name)
-	this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError {
+		msg = fmt.Sprintf("%v 数据库: %v", msg, _name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
 	return
 }
 
@@ -130,8 +136,10 @@ func (this *CreateTableReviewer) DetectDBNameReg(_name string) (haveError bool) 
 func (this *CreateTableReviewer) DetectTableNameLength(_name string) (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
-	msg = fmt.Sprintf("%v 表: %v", msg, _name)
-	this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError {
+		msg = fmt.Sprintf("%v 表: %v", msg, _name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+	}
 	return
 }
 
