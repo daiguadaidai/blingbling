@@ -113,7 +113,7 @@ func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, erro
 	for _, stmtNode := range stmtNodes {
 		review := reviewer.NewReviewer(stmtNode, reviewConfig, dbConfig)
 		if review == nil {
-			reviewMSG := new(reviewer.ReviewMSG)
+			reviewMSG := reviewer.NewReivewMSG()
 			reviewMSG.HaveError = true
 			reviewMSG.Sql = stmtNode.Text()
 			reviewMSG.AppendMSG(true, "无法匹配到相关SQL语句类型")
