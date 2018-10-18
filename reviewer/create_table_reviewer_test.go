@@ -561,7 +561,28 @@ func TestCreateTableReviewer_Review_Engine(t *testing.T) {
 	var password string = "oracle12"
 	var database string = "employees"
 
-	sql := "CREATE TABLE `report_label` (   `id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',   `label` BIGINT(20) NOT NULL DEFAULT '0' COMMENT '举报类型标签',   `label_name` VARCHAR(50) NOT NULL DEFAULT ' ' COMMENT '举报类型的名称',   `parent_label` BIGINT(20) NOT NULL DEFAULT '0' COMMENT '对应的一级类目标签，0代表该标签为一级类目',   `is_deleted` INT(11) NOT NULL DEFAULT '0' COMMENT '0-未删除 1-已删除',   `biz_type` INT(11) NOT NULL DEFAULT '0' COMMENT '访问权限',   PRIMARY KEY (`id`),   UNIQUE INDEX `udx_label` (`label`),   INDEX `idx_parent_label` (`parent_label`),   INDEX `idx_biz_type` (`biz_type`)  )  COMMENT='用于记录图像举报中的具体原因'  COLLATE='utf8mb4_general_ci'  ENGINE=InnoDB  AUTO_INCREMENT=1"
+	sql := `
+create table cps_transfer_flow_127 (
+    id bigint(20) unsigned not null auto_increment comment 'id',
+    col1 bigint(20) not null default '0' comment 'col1',
+    col2 bigint(20) not null default '0' comment 'col2',
+    col3 bigint(20) not null default '0' comment 'col3',
+    col4 int(11) not null default '0' comment 'col4',
+    col5 varchar(64) not null default '0' comment 'col5',
+    col6 varchar(64) not null default '0' comment 'col6',
+    col7 varchar(64) not null default '0' comment 'col7',
+    col8 varchar(64) not null default '0' comment 'col8',
+    col9 varchar(64) not null default '0' comment 'col9',
+    col10 int(11) not null default '0' comment 'col10',
+    col11 int(11) not null default '0' comment 'col11',
+    col12 int(11) not null default '0' comment 'col12',
+    primary key (id),
+    unique index uniq_transid (col3),
+    unique index uniq_order_sn_type (col8, col9),
+    index idx_created_at (col11),
+    index idx_mall (col12)
+) comment='打淘客打款流水表' collate='utf8mb4_general_ci' engine=innodb
+`
 
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(sql, "", "")

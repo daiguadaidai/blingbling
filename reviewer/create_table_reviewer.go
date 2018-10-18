@@ -449,8 +449,6 @@ func (this *CreateTableReviewer) DetectPKAutoIncrement() (haveError bool) {
 
 // 循环检测数据库的相关索引信息
 func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
-	var reviewMSG *ReviewMSG
-
 	for _, constraint := range this.StmtNode.Constraints {
 		var msg string
 		// 检测索引/约束名是否重复
@@ -499,11 +497,10 @@ func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
 
 		// 约束名称长度
 		haveError, _ = DetectNameLength(constraint.Name, this.ReviewConfig.RuleNameLength)
-		if reviewMSG != nil {
+		if haveError {
 			msg = fmt.Sprintf("检测失败. %v. 索引/约束: %v",
 				fmt.Sprintf(config.MSG_NAME_LENGTH_ERROR, this.ReviewConfig.RuleNameLength),
 				constraint.Name)
-			haveError = true
 			this.ReviewMSG.AppendMSG(haveError, msg)
 			return
 		}
@@ -604,11 +601,9 @@ func (this *CreateTableReviewer) DectectConstraintIndex(_constraint *ast.Constra
 	_constraint: 约束信息
  */
 func (this *CreateTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Constraint) (haveError bool) {
-	var reviewMSG *ReviewMSG
-
 	// 间隔唯一索引命名规范
 	haveError, _ = DetectNameReg(_constraint.Name, this.ReviewConfig.RuleUniqueIndexNameReg)
-	if reviewMSG != nil {
+	if haveError {
 		msg := fmt.Sprintf("检测失败. %v 唯一索引: %v",
 			fmt.Sprintf(config.MSG_UNIQUE_INDEX_NAME_REG_ERROR, this.ReviewConfig.RuleUniqueIndexNameReg),
 			_constraint.Name)
