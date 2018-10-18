@@ -47,7 +47,7 @@ func TestRenameTableReviewer_Review(t *testing.T) {
 
 	for _, reviewMSG := range reviewMSGs {
 		if reviewMSG != nil {
-			fmt.Printf("Code: %v, MSG: %v", reviewMSG.Code, reviewMSG.MSG)
+			fmt.Println(reviewMSG.String())
 		}
 	}
 }

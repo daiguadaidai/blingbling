@@ -8,21 +8,24 @@ import (
 )
 
 type RenameTableReviewer struct {
+	ReviewMSG *ReviewMSG
+
 	StmtNode *ast.RenameTableStmt
 	ReviewConfig *config.ReviewConfig
 	DBConfig *config.DBConfig
 }
 
+func (this *RenameTableReviewer) Init() {
+	this.ReviewMSG = NewReivewMSG()
+}
+
 func (this *RenameTableReviewer) Review() *ReviewMSG {
-	var reviewMSG *ReviewMSG
+	this.Init()
 
 	// 禁止使用 rename
 	if !this.ReviewConfig.RuleAllowRenameTable {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = config.MSG_ALLOW_RENAME_TABLE_ERROR
-
-		return reviewMSG
+		 this.ReviewMSG.AppendMSG(true, config.MSG_ALLOW_RENAME_TABLE_ERROR)
+		return this.ReviewMSG
 	}
 
 	// 允许使用rename
@@ -30,105 +33,113 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 	for _, tableToTable := range this.StmtNode.TableToTables{
 
 		// 检测数据库名称长度
-		reviewMSG = this.DetectDBNameLength(tableToTable.NewTable.Schema.String())
-		if reviewMSG != nil {
-			reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-			reviewMSG.Code = REVIEW_CODE_ERROR
-			return reviewMSG
+		haveError := this.DetectDBNameLength(tableToTable.NewTable.Schema.String())
+		if haveError {
+			return this.ReviewMSG
 		}
 
 		// 检测数据库命名规则
 		if tableToTable.NewTable.Schema.String() != "" {
-			reviewMSG = this.DetectDBNameReg(tableToTable.NewTable.Schema.String())
-			if reviewMSG != nil {
-				reviewMSG.MSG = fmt.Sprintf("%v %v", "数据库名", reviewMSG.MSG)
-				reviewMSG.Code = REVIEW_CODE_ERROR
-				return reviewMSG
+			haveError = this.DetectDBNameReg(tableToTable.NewTable.Schema.String())
+			if haveError {
+				return this.ReviewMSG
 			}
 		}
 
 		// 检测表名称长度
-		reviewMSG = this.DetectToTableNameLength(tableToTable.NewTable.Name.String())
-		if reviewMSG != nil {
-			reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-			reviewMSG.Code = REVIEW_CODE_ERROR
-			return reviewMSG
+		haveError = this.DetectToTableNameLength(tableToTable.NewTable.Name.String())
+		if haveError {
+			return this.ReviewMSG
 		}
 
 		// 检测表命名规则
-		reviewMSG = this.DetectToTableNameReg(tableToTable.NewTable.Name.String())
-		if reviewMSG != nil {
-			reviewMSG.MSG = fmt.Sprintf("%v %v", "表名", reviewMSG.MSG)
-			reviewMSG.Code = REVIEW_CODE_ERROR
-			return reviewMSG
+		haveError = this.DetectToTableNameReg(tableToTable.NewTable.Name.String())
+		if haveError {
+			return this.ReviewMSG
 		}
 	}
 
 	// 链接实例检测表相关信息(所有)
-	reviewMSG = this.DetectInstanceTables()
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError := this.DetectInstanceTables()
+	if haveError {
+		return this.ReviewMSG
 	}
 
-	reviewMSG = new(ReviewMSG)
-	reviewMSG.Code = REVIEW_CODE_SUCCESS
-	reviewMSG.MSG = "审核成功"
-
-	return reviewMSG
+	return this.ReviewMSG
 }
 
 /* 检测数据库名长度
 Params:
 _name: 需要检测的名称
 */
-func (this *RenameTableReviewer) DetectDBNameLength(_name string) *ReviewMSG {
-	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+func (this *RenameTableReviewer) DetectDBNameLength(_name string) (haveError bool) {
+	var msg string
+	haveError, msg = DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+	if haveError {
+		msg = fmt.Sprintf("%v %v", "数据库名", msg)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
+	return
 }
 
 /* 检测数据库命名规范
 Params:
 _name: 需要检测的名称
 */
-func (this *RenameTableReviewer) DetectDBNameReg(_name string) *ReviewMSG {
-	return DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
+func (this *RenameTableReviewer) DetectDBNameReg(_name string) (haveError bool) {
+	var msg string
+	haveError, msg = DetectNameReg(_name, this.ReviewConfig.RuleNameReg)
+	if haveError {
+		msg = fmt.Sprintf("%v %v", "数据库名", msg)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
+	return
 }
 
 /* 检测数据库名长度
 Params:
     _name: 需要检测的名称
  */
-func (this *RenameTableReviewer) DetectToTableNameLength(_name string) *ReviewMSG {
-	return DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+func (this *RenameTableReviewer) DetectToTableNameLength(_name string) (haveError bool) {
+	var msg string
+	haveError, msg = DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
+	if haveError {
+		msg = fmt.Sprintf("%v %v", "数据库名", msg)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
+	}
+	return
 }
 
 /* 检测数据库命名规范
 Params:
     _name: 需要检测的名称
  */
-func (this *RenameTableReviewer) DetectToTableNameReg(_name string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
-	reviewMSG = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
-	if reviewMSG != nil {
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v 表名: %v",
+func (this *RenameTableReviewer) DetectToTableNameReg(_name string) (haveError bool) {
+	var msg string
+	haveError, msg = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
+	if haveError {
+		msg = fmt.Sprintf("检测失败. %v 表名: %v",
 			fmt.Sprintf(config.MSG_TABLE_NAME_GRE_ERROR, this.ReviewConfig.RuleTableNameReg),
 			_name)
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 链接指定实例检测相关表信息(所有)
-func (this *RenameTableReviewer) DetectInstanceTables() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *RenameTableReviewer) DetectInstanceTables() (haveError bool) {
 	tableInfo := dao.NewTableInfo(this.DBConfig, "")
 	err := tableInfo.OpenInstance()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 删除表sql. %v", err)
-		return reviewMSG
+		msg := fmt.Sprintf("警告: 无法链接到指定实例. 删除表sql. %v", err)
+		this.ReviewMSG.AppendMSG(false, msg)
+		tableInfo.CloseInstance()
+		return
 	}
 
 	for _, tableStmt := range this.StmtNode.TableToTables {
@@ -149,15 +160,16 @@ func (this *RenameTableReviewer) DetectInstanceTables() *ReviewMSG {
 			newSchemaName = this.DBConfig.Database
 		}
 
-		reviewMSG = this.DetectInstanceTable(tableInfo, oldSchemaName, oldTableName,
+		haveError = this.DetectInstanceTable(tableInfo, oldSchemaName, oldTableName,
 			newSchemaName, newTableName)
-
-		if reviewMSG != nil {
-			return CloseTableInstance(reviewMSG, tableInfo)
+		if haveError {
+			tableInfo.CloseInstance()
+			return
 		}
 	}
 
-	return CloseTableInstance(reviewMSG, tableInfo)
+	tableInfo.CloseInstance()
+	return
 }
 
 /* 链接指定实例检测相关表信息
@@ -174,20 +186,21 @@ func (this *RenameTableReviewer) DetectInstanceTable(
 	_OldTableName string,
 	_NewDBName string,
 	_NewTableName string,
-) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+) (haveError bool) {
 	// 老表不存在报错
-	reviewMSG = DetectTableNotExistsByName(_tableInfo, _OldDBName, _OldTableName)
-	if reviewMSG != nil {
-		return reviewMSG
+	var msg string
+	haveError, msg = DetectTableNotExistsByName(_tableInfo, _OldDBName, _OldTableName)
+	haveMSG := this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError || haveMSG {
+		return
 	}
 
 	// 新表已经存在报错
-	reviewMSG = DetectTableExistsByName(_tableInfo, _NewDBName, _NewTableName)
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError, msg = DetectTableExistsByName(_tableInfo, _NewDBName, _NewTableName)
+	haveMSG = this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError || haveMSG {
+		return
 	}
 
-	return reviewMSG
+	return
 }

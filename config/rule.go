@@ -8,7 +8,7 @@ const (
 	// 通用字符集检测
 	RULE_CHARSET = "utf8,utf8mb4"
 	// 通用 COLLATE
-	RULE_COLLATE = "utf8_general_ci,utf8mb4_general_ci"
+	RULE_COLLATE = "utf8_general_ci,utf8_unicode_ci,utf8mb4_general_ci,utf8mb4_unicode_ci"
 	// 是否允许创建
 	RULE_ALLOW_CREATE_DATABASE = false
 	// 是否允许删除数据库
@@ -38,7 +38,7 @@ const (
 	// 索引命名规范
 	RULE_INDEX_NAME_REG = `^idx_[a-z\$\d_]*$`
 	// 唯一索引命名规范
-	RULE_UNIQUE_INDEX_NAME_REG = `^udx_[a-z\$\d_]*$`
+	RULE_UNIQUE_INDEX_NAME_REG = `^uk_[a-z\$\d_]*$`
 	// 所有字段都 必须有 not null
 	RULE_ALL_COLUMN_NOT_NULL = false
 	// 是否允许外键
@@ -46,7 +46,7 @@ const (
 	// 是否允许有全文索引
 	RULE_ALLOW_FULL_TEXT = false
 	// 必须为NOT NULL 的类型
-	RULE_NOT_NULL_COLUMN_TYPE = "varchar"
+	RULE_NOT_NULL_COLUMN_TYPE = ""
 	// 必须为 NOT NULL 的字段名
 	RULE_NOT_NULL_COLUMN_NAME = "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time"
 	// Text 字段类型允许使用个数

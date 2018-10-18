@@ -208,17 +208,25 @@ tcp6       0      0 :::19527                :::*                    LISTEN      
 
 ```
 {
-    "Code":0,
-    "MSG":"",
-    "ReviewMSGs":[
+    "Code": 0,
+    "MSG": "",
+    "ReviewMSGs": [
         {
-            "Sql":"alter table employees add column age1 int not null;",
-            "Code":2,
-            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+            "Sql": "alter table employees add column age1 int not null;",
+            "HaveError": true,
+            "HaveWarning": false,
+            "ErrorMSGs":[
+                "检测失败. 字段必须要有注释. alter add 字段: age1 "
+            ],
+            "WarningMSGs":[]
         }, {
-            "Sql":" delete from employees WHERE id = 1;",
-            "Code":1,
-            "MSG":"检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+            "Sql": " delete from employees WHERE id = 1;",
+            "HaveError": true,
+            "HaveWarning": false,
+            "ErrorMSGs": [
+                "检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+            ],
+            "WarningMSGs": []
         }
     ]
 }
@@ -239,15 +247,15 @@ tcp6       0      0 :::19527                :::*                    LISTEN      
 3. **ReviewMSGs:** 所有审核程序, 当输入多个sql语句是, 则有多个审核消息.
 
     - **Sql:** 审核的sql
+
+    - **HaveError:** 是否有错误
+
+    - **HaveWarning:** 是否有警告
+
+    - **ErrorMSGs:** 错误的消息(是一个数组)
+
+    - **WarningMSGs:** 警告的消息(是一个数组)
     
-    - **Code:** 审核代码: 
-
-        - **0:** 该`sql`审核通过
-
-        - **1:** (警告)该`sql`语法正确, 但是有一些无法无法确认的东西
-
-        - **2:** 该`sql`审核失败
-
 ### 可以指定的参数
 
 通过访问 `http://127.0.0.1:19527/ClientParams` 可以获取客户端可以指定的参数
@@ -392,17 +400,25 @@ curl http://127.0.0.1:19527/ClientParams
 ```
 curl -X POST http://10.10.10.55:19527/sqlReview -d '{"Host":"10.10.10.21", "Port":3307, "Username":"root", "Password":"root", "Database":"employees", "Sqls":"alter table employees add column age1 int not null; delete from employees WHERE id = 1;"}'
 {
-    "Code":0,
-    "MSG":"",
-    "ReviewMSGs":[
+    "Code": 0,
+    "MSG": "",
+    "ReviewMSGs": [
         {
-            "Sql":"alter table employees add column age1 int not null;",
-            "Code":2,
-            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+            "Sql": "alter table employees add column age1 int not null;",
+            "HaveError": true,
+            "HaveWarning": false,
+            "ErrorMSGs":[
+                "检测失败. 字段必须要有注释. alter add 字段: age1 "
+            ],
+            "WarningMSGs":[]
         }, {
-            "Sql":" delete from employees WHERE id = 1;",
-            "Code":1,
-            "MSG":"检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+            "Sql": " delete from employees WHERE id = 1;",
+            "HaveError": true,
+            "HaveWarning": false,
+            "ErrorMSGs": [
+                "检测失败. 执行explain sql获取sql影响行数失败: 执行explain失败: 10.10.10.21:3307. explain select * from  employees where id = 1; Error 1054: Unknown column 'id' in 'where clause'"
+            ],
+            "WarningMSGs": []
         }
     ]
 }
@@ -415,19 +431,23 @@ curl -X POST http://10.10.10.55:19527/sqlReview -d '{"Host":"10.10.10.21", "Port
 ```
 curl "http://10.10.10.55:19527/sqlReview?Host=10.10.10.21&Port=3307&Username=HH&Password=oracle12&Database=employees&Sqls=alter%20table%20employees%20add%20column%20age1%20int%20not%20null"
 {
-    "Code":0,
-    "MSG":"",
-    "ReviewMSGs":[
+    "Code": 0,
+    "MSG": "",
+    "ReviewMSGs": [
         {
-            "Sql":"alter table employees add column age1 int not null",
-            "Code":2,
-            "MSG":"检测失败. 字段必须要有注释. alter add 字段: age1 "
+            "Sql": "alter table employees add column age1 int not null",
+            "HaveError": true,
+            "HaveWarning": false,
+            "ErrorMSGs": [
+                "检测失败. 字段必须要有注释. alter add 字段: age1 "
+            ],
+            "WarningMSGs": []
         }
     ]
 }
 ```
 
-### Python 客户端使用
+### Python客户端使用
 
 只演示使用POST的方法
 
@@ -450,7 +470,7 @@ r = requests.post(url, json = data)
 print(r.text)
 ```
 
-### Golang 客户端使用
+### Golang客户端使用
 
 只演示使用POST的方法
 
@@ -513,7 +533,7 @@ func main() {
 }
 ```
 
-### Jquery Ajax 客户端
+### Jquery-Ajax客户端
 
 只演示`POST`请求
 
@@ -559,7 +579,7 @@ func main() {
 </html>
 ```
 
-### VUE RESOURCE 客户端
+### VUE-RESOURCE客户端
 
 只演示`POST`请求
 
@@ -618,7 +638,7 @@ func main() {
 </html>
 ```
 
-### axios 客户端
+### axios客户端
 
 只演示`POST`请求
 
@@ -707,7 +727,7 @@ r = requests.post(url, json = data)
 
 print(r.text)
 # 输出
-{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column age1 int not null comment \"年龄\"","Code":2,"MSG":"字段名 检测失败. 命名规则: ^_[a-z\\$_][a-z\\$\\d_]*$. 名称: age1, "}]}
+{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column age1 int not null comment \"年龄\"","HaveError":true,"HaveWarning":false,"ErrorMSGs":["字段名 检测失败. 命名规则: ^_[a-z\\$_][a-z\\$\\d_]*$. 名称: age1, "],"WarningMSGs":[]}]}
 
 
 # 将sql语句该为以下划线(_)命名的将审核通过
@@ -715,7 +735,7 @@ data['Sqls'] = 'alter table employees add column _age1 int not null comment "年
 r = requests.post(url, json = data)
 print(r.text)
 # 输出
-{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","Code":0,"MSG":"审核成功!"}]}
+{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","HaveError":false,"HaveWarning":true,"ErrorMSGs":[],"WarningMSGs":["警告: 检测目标实例的数据库是否存在出错. Error 1045: Access denied for user 'root'@'10.10.10.55' (using password: YES)"]}]}
 ```
 
 > **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数--必须--是同时出现的.

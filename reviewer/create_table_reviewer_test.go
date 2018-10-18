@@ -123,7 +123,7 @@ CREATE TABLE test.t1 (
 
 	for _, reviewMSG := range reviewMSGs {
 		if reviewMSG != nil {
-			fmt.Printf("Code: %v, MSG: %v", reviewMSG.Code, reviewMSG.MSG)
+			fmt.Println(reviewMSG.String())
 		}
 	}
 }
@@ -410,7 +410,7 @@ CREATE TABLE test.mf_fd_cache (
 
 	for _, reviewMSG := range reviewMSGs {
 		if reviewMSG != nil {
-			fmt.Printf("Code: %v, MSG: %v", reviewMSG.Code, reviewMSG.MSG)
+			fmt.Println(reviewMSG.String())
 		}
 	}
 }
@@ -519,7 +519,7 @@ PARTITION BY LIST(store_id) (
 
 	for _, reviewMSG := range reviewMSGs {
 		if reviewMSG != nil {
-			fmt.Printf("Code: %v, MSG: %v", reviewMSG.Code, reviewMSG.MSG)
+			fmt.Println(reviewMSG.String())
 		}
 	}
 }
@@ -544,7 +544,7 @@ func TestCreateTableReviewer_Review_Like(t *testing.T) {
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		visitor := NewCreateTableVisitor()
 		stmtNode.Accept(visitor)
@@ -575,7 +575,7 @@ func TestCreateTableReviewer_Review_Engine(t *testing.T) {
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		visitor := NewCreateTableVisitor()
 		stmtNode.Accept(visitor)

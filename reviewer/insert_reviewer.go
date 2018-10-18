@@ -8,6 +8,8 @@ import (
 )
 
 type InsertReviewer struct {
+	ReviewMSG *ReviewMSG
+
 	StmtNode *ast.InsertStmt
 	ReviewConfig *config.ReviewConfig
 	DBConfig *config.DBConfig
@@ -16,147 +18,131 @@ type InsertReviewer struct {
 }
 
 func (this *InsertReviewer) Init() {
+	this.ReviewMSG = NewReivewMSG()
+
 	tableName := this.StmtNode.Table.TableRefs.Left.(*ast.TableSource).Source.(*ast.TableName)
 	this.SchemaName = tableName.Schema.String()
 	this.TableName = tableName.Name.String()
 }
 
 func (this *InsertReviewer) Review() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
 	this.Init()
 
 	// 是否允许不指定字段
-	reviewMSG = this.DetectAllowNoColumns()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError := this.DetectAllowNoColumns()
+	if haveError {
+		return this.ReviewMSG
 	}
 
 	// 是否允许 insert ignore
-	reviewMSG = this.DetectAllowInsertIgnore()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError = this.DetectAllowInsertIgnore()
+	if haveError {
+		return this.ReviewMSG
 	}
+
 	// 是否允许 replace into
-	reviewMSG = this.DetectAllowInsertReplace()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError = this.DetectAllowInsertReplace()
+	if haveError {
+		return this.ReviewMSG
 	}
 
 	// 检测是否允许 insert select
-	reviewMSG = this.DetectAllowInsertSelect()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError = this.DetectAllowInsertSelect()
+	if haveError {
+		return this.ReviewMSG
 	}
 
 	// 检测每批insert是否超过指定行数
-	reviewMSG = this.DetectInsertRows()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError = this.DetectInsertRows()
+	if haveError {
+		return this.ReviewMSG
 	}
 
 	// 检测insert的值的个数是否和字段个数相等
-	reviewMSG = this.DetectInsertValueCount()
-	if reviewMSG != nil {
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		return reviewMSG
+	haveError = this.DetectInsertValueCount()
+	if haveError {
+		return this.ReviewMSG
 	}
 
 	// 需要查询数据库相关的信息
-	reviewMSG = this.DetectFromInstance()
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError = this.DetectFromInstance()
+	if haveError {
+		return this.ReviewMSG
 	}
 
-	// 能走到这里说明写的语句审核成功
-	reviewMSG = new(ReviewMSG)
-	reviewMSG.Code = REVIEW_CODE_SUCCESS
-	reviewMSG.MSG = "审核成功"
-
-	return reviewMSG
+	return this.ReviewMSG
 }
 
 // 检测是否允许不指定字段
-func (this *InsertReviewer) DetectAllowNoColumns() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *InsertReviewer) DetectAllowNoColumns() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertNoColumn && len(this.StmtNode.Columns) == 0 {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_NO_COLUMN_ERROR)
-		return reviewMSG
+		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_NO_COLUMN_ERROR)
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 检测是否允许使用 insert ignore
-func (this * InsertReviewer) DetectAllowInsertIgnore() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this * InsertReviewer) DetectAllowInsertIgnore() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertIgnore && this.StmtNode.IgnoreErr {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_IGNORE_ERROR)
-		return reviewMSG
+		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_IGNORE_ERROR)
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 检测是否允许使用 replace into
-func (this * InsertReviewer) DetectAllowInsertReplace() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this * InsertReviewer) DetectAllowInsertReplace() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertReplace && this.StmtNode.IsReplace {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_REPLIACE_ERROR)
-		return reviewMSG
+		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_REPLIACE_ERROR)
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 检测是否允许 insert select
-func (this *InsertReviewer) DetectAllowInsertSelect() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *InsertReviewer) DetectAllowInsertSelect() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertSelect && this.StmtNode.Select != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_SELECT_ERROR)
-		return reviewMSG
+		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_SELECT_ERROR)
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 检测Insert
-func (this *InsertReviewer) DetectInsertRows() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *InsertReviewer) DetectInsertRows() (haveError bool) {
 	if len(this.StmtNode.Lists) > this.ReviewConfig.RuleInsertRows {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf("检测失败. %v",
+		msg := fmt.Sprintf("检测失败. %v",
 			fmt.Sprintf(config.MSG_INSERT_ROWS_ERROR, this.ReviewConfig.RuleInsertRows))
-		return reviewMSG
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 // 检测每个值是否和字段数一样
-func (this *InsertReviewer) DetectInsertValueCount() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *InsertReviewer) DetectInsertValueCount() (haveError bool) {
 	if columnLen := len(this.StmtNode.Columns); columnLen > 0 { // 有指定字段则直接和字段长度做比较
 		for i, list := range this.StmtNode.Lists {
 			if len(list) != columnLen {
-				reviewMSG = new(ReviewMSG)
-				reviewMSG.MSG = fmt.Sprintf("检测失败. 第%v行值的个数和字段个数不一样", i+1)
-				return reviewMSG
+				msg := fmt.Sprintf("检测失败. 第%v行值的个数和字段个数不一样", i+1)
+				haveError = true
+				this.ReviewMSG.AppendMSG(haveError, msg)
+				return
 			}
 		}
 	} else { // 没有指定字段名就逐个进行计算了
@@ -168,9 +154,10 @@ func (this *InsertReviewer) DetectInsertValueCount() *ReviewMSG {
 				beforeColumnLen = len(list)
 			} else {
 				if beforeColumnLen != len(list) {
-					reviewMSG = new(ReviewMSG)
-					reviewMSG.MSG = fmt.Sprintf("检测失败. 第%v行值的个数和其他行不一样", i+1)
-					return reviewMSG
+					msg := fmt.Sprintf("检测失败. 第%v行值的个数和其他行不一样", i+1)
+					haveError = true
+					this.ReviewMSG.AppendMSG(haveError, msg)
+					return
 				}
 
 				beforeColumnLen = len(list)
@@ -178,80 +165,83 @@ func (this *InsertReviewer) DetectInsertValueCount() *ReviewMSG {
 		}
 	}
 
-	return reviewMSG
+	return
 }
 
 // 和原表结合进行检测
-func (this *InsertReviewer) DetectFromInstance() *ReviewMSG {
-	var reviewMSG *ReviewMSG
+func (this *InsertReviewer) DetectFromInstance() (haveError bool) {
+	var msg string
 
 	tableInfo := dao.NewTableInfo(this.DBConfig, "")
 	err := tableInfo.OpenInstance()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在. %v", err)
-		return reviewMSG
+		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在. %v", err)
+		haveError = true
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		tableInfo.CloseInstance()
+		return
 	}
 
 	// 检测数据库不存在报错
 	if this.SchemaName != "" {
-		reviewMSG = DetectDatabaseNotExistsByName(tableInfo, this.SchemaName)
-		if reviewMSG != nil {
-			return CloseTableInstance(reviewMSG, tableInfo)
+		haveError, msg = DetectDatabaseNotExistsByName(tableInfo, this.SchemaName)
+		haveMSG := this.ReviewMSG.AppendMSG(haveError, msg)
+		if haveError || haveMSG {
+			tableInfo.CloseInstance()
+			return
 		}
 	}
 
 	// 检测表不存在则报错
-	reviewMSG = DetectTableNotExistsByName(tableInfo, this.SchemaName, this.TableName)
-	if reviewMSG != nil {
-		return CloseTableInstance(reviewMSG, tableInfo)
+	haveError, msg = DetectTableNotExistsByName(tableInfo, this.SchemaName, this.TableName)
+	haveMSG := this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError || haveMSG {
+		tableInfo.CloseInstance()
+		return
 	}
 
 	// 获取原表的建表语句
 	err = tableInfo.InitCreateTableSql(this.SchemaName, this.TableName)
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 该Insert语法正确. " +
+		msg := fmt.Sprintf("警告: 该Insert语法正确. " +
 			"但是无法获取到源表建表sql. %v", err)
-		return CloseTableInstance(reviewMSG, tableInfo)
+		this.ReviewMSG.AppendMSG(false, msg)
+		tableInfo.CloseInstance()
+		return
 	}
-	CloseTableInstance(nil, tableInfo) // 该查询数据库的地方已经完成, 关闭相关链接
+	tableInfo.CloseInstance() // 该查询数据库的地方已经完成, 关闭相关链接
 
 	err = tableInfo.ParseCreateTableInfo()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 该Insert语法正确. 解析原表建表语句错误. 无法对比" +
+		msg := fmt.Sprintf("警告: 该Insert语法正确. 解析原表建表语句错误. 无法对比" +
 			"%v", err)
-		return reviewMSG
+		this.ReviewMSG.AppendMSG(false, msg)
+		tableInfo.CloseInstance()
+		return
 	}
 
 	// 检测字段是否存在
-	reviewMSG = this.DetectColumnExists(tableInfo)
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError = this.DetectColumnExists(tableInfo)
+	if haveError {
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 检测字段是否存在
 Params:
     _tableInfo: 解析的数据库表信息
  */
-func (this *InsertReviewer) DetectColumnExists(_tableInfo *dao.TableInfo) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *InsertReviewer) DetectColumnExists(_tableInfo *dao.TableInfo) (haveError bool) {
 	for _, column := range this.StmtNode.Columns {
 		if _, ok := _tableInfo.ColumnNameMap[column.Name.String()]; !ok {
-			reviewMSG = new(ReviewMSG)
-			reviewMSG.Code = REVIEW_CODE_ERROR
-			reviewMSG.MSG = fmt.Sprintf("警告: Insert 指定的字段 %v 不存在", column.Name.String())
-			return reviewMSG
+			msg := fmt.Sprintf("警告: Insert 指定的字段 %v 不存在", column.Name.String())
+			haveError = true
+			this.ReviewMSG.AppendMSG(haveError, msg)
+			return
 		}
 	}
 
-	return reviewMSG
+	return
 }

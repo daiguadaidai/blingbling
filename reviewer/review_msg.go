@@ -42,15 +42,54 @@ func (this *ResponseReviewData) GetErrorJson(_err error) string {
 
 type ReviewMSG struct {
 	Sql string
-	Code int
-	MSG string
+	HaveError bool
+	HaveWarning bool
+	ErrorMSGs []string
+	WarningMSGs []string
+}
+
+func NewReivewMSG() *ReviewMSG {
+	return &ReviewMSG{
+		ErrorMSGs: make([]string, 0, 1),
+		WarningMSGs: make([]string, 0, 1),
+	}
+}
+
+// 重新设置是否有错误和警告
+func (this *ReviewMSG) ResetHaveErrorAndWarning() {
+	if len(this.ErrorMSGs) > 0 {
+		this.HaveError = true
+	}
+	if len(this.WarningMSGs) > 0 {
+		this.HaveWarning = true
+	}
+}
+
+/* 添加信息, 如果有错误则信息是错误信息, 如果没有错误且有信息, 则是警告信息
+Params:
+    _haveError: 是否有错误
+    _msg: 相关信息
+ */
+func (this *ReviewMSG) AppendMSG(_haveError bool, _msg string) (haveMSG bool) {
+	if _haveError {
+		this.ErrorMSGs = append(this.ErrorMSGs, _msg)
+	} else if _msg != "" {
+		haveMSG = true
+		this.WarningMSGs = append(this.WarningMSGs, _msg)
+	}
+
+	return
 }
 
 func (this *ReviewMSG) String() string {
-	rs := fmt.Sprintf("{Code: %v, MSG: %v, Sql: %v}",
-		this.Code, this.MSG, this.Sql)
+	jsonBytes, err := json.Marshal(this)
+	if err != nil {
+		return fmt.Sprintf(`{Sql: %v, HaveError: true, HaveWarning: false, ErrorMSG: [%v], WarningMSG: []}`,
+			this.Sql,
+			fmt.Sprintf("审核信息转化成json时出错 %v", err))
+	}
 
-	return rs
+	return string(jsonBytes)
 }
 
 

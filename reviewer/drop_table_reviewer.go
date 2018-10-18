@@ -8,39 +8,37 @@ import (
 )
 
 type DropTableReviewer struct {
+	ReviewMSG *ReviewMSG
+
 	StmtNode *ast.DropTableStmt
 	ReviewConfig *config.ReviewConfig
 	DBConfig *config.DBConfig
 }
 
+func (this *DropTableReviewer) Init() {
+	this.ReviewMSG = NewReivewMSG()
+}
+
 func (this *DropTableReviewer) Review() *ReviewMSG {
-	var reviewMSG *ReviewMSG
+	this.Init()
 
 	if !this.ReviewConfig.RuleAllowDropTable {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = config.MSG_ALLOW_DROP_TABLE_ERROR
+		this.ReviewMSG.AppendMSG(true, config.MSG_ALLOW_DROP_TABLE_ERROR)
 
-		return reviewMSG
+		return this.ReviewMSG
 	}
 
 	// 链接实例检测表相关信息(所有)
-	reviewMSG = this.DetectInstanceTables()
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError := this.DetectInstanceTables()
+	if haveError {
+		return this.ReviewMSG
 	}
 
-	reviewMSG = new(ReviewMSG)
-	reviewMSG.Code = REVIEW_CODE_SUCCESS
-	reviewMSG.MSG = "审核成功"
-
-	return reviewMSG
+	return this.ReviewMSG
 }
 
 // 链接指定实例检测相关表信息(所有)
-func (this *DropTableReviewer) DetectInstanceTables() *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func (this *DropTableReviewer) DetectInstanceTables() (haveError bool) {
 	for _, tableStmt := range this.StmtNode.Tables {
 		var schemaName string
 		if tableStmt.Schema.String() != "" {
@@ -48,13 +46,13 @@ func (this *DropTableReviewer) DetectInstanceTables() *ReviewMSG {
 		} else {
 			schemaName = this.DBConfig.Database
 		}
-		reviewMSG = this.DetectInstanceTable(schemaName, tableStmt.Name.String())
-		if reviewMSG != nil {
-			return reviewMSG
+		haveError = this.DetectInstanceTable(schemaName, tableStmt.Name.String())
+		if haveError {
+			return
 		}
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 链接指定实例检测相关表信息
@@ -62,24 +60,26 @@ Params:
     _dbName: 数据库名
     _tableName: 原表名
  */
-func (this *DropTableReviewer) DetectInstanceTable(_dbName, _tableName string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
+func (this *DropTableReviewer) DetectInstanceTable(_dbName, _tableName string) (haveError bool) {
+	var msg string
 
 	tableInfo := dao.NewTableInfo(this.DBConfig, _tableName)
 	err := tableInfo.OpenInstance()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法删除表[%v]. %v",
+		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法删除表 %v. %v",
 			_tableName, err)
-		return reviewMSG
+		this.ReviewMSG.AppendMSG(false, msg)
+		return
 	}
 
 	// 检测表是否存在
-	reviewMSG = DetectTableNotExistsByName(tableInfo, _dbName, _tableName)
-	if reviewMSG != nil {
-		return CloseTableInstance(reviewMSG, tableInfo)
+	haveError, msg = DetectTableNotExistsByName(tableInfo, _dbName, _tableName)
+	haveMSG := this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError || haveMSG {
+		tableInfo.CloseInstance()
+		return
 	}
 
-	return CloseTableInstance(reviewMSG, tableInfo)
+	tableInfo.CloseInstance()
+	return
 }

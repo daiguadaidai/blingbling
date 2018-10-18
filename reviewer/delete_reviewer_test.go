@@ -60,7 +60,7 @@ func TestDeleteReviewer_Review(t *testing.T) {
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 }
 
@@ -88,6 +88,6 @@ delete from employees WHERE emp_no = 1
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 }

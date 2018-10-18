@@ -34,7 +34,7 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		insertReview := review.(*InsertReviewer)
 		fmt.Printf("Table: %T, %[1]v \n", insertReview.StmtNode.Table.TableRefs.Left)
@@ -93,7 +93,7 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		insertReview := review.(*InsertReviewer)
 		fmt.Println("Table:", insertReview.StmtNode.Table.TableRefs)
@@ -151,8 +151,9 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
-insertReview := review.(*InsertReviewer)
+		fmt.Println(reviewMSG.String())
+
+		insertReview := review.(*InsertReviewer)
 		fmt.Printf("Table: %T %[1]v\n", insertReview.StmtNode.Table)
 
 		fmt.Println("IsIgnore:", insertReview.StmtNode.IgnoreErr)
@@ -210,7 +211,7 @@ func TestInsertReviewer_Review_1(t *testing.T) {
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 }
 
@@ -239,6 +240,6 @@ INSERT INTO emp(emp_no, birth_date, first_name) VALUES(1000001, '2001-01-01', 'H
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 }

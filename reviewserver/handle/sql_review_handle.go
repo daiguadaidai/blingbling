@@ -114,17 +114,16 @@ func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, erro
 		review := reviewer.NewReviewer(stmtNode, reviewConfig, dbConfig)
 		if review == nil {
 			reviewMSG := new(reviewer.ReviewMSG)
-			reviewMSG.Code = reviewer.REVIEW_CODE_ERROR
+			reviewMSG.HaveError = true
 			reviewMSG.Sql = stmtNode.Text()
-			reviewMSG.MSG = "无法匹配到相关SQL语句类型"
+			reviewMSG.AppendMSG(true, "无法匹配到相关SQL语句类型")
 			reviewMSGs = append(reviewMSGs, reviewMSG)
 			continue
 		}
 
 		reviewMSG := review.Review()
-		if reviewMSG != nil {
-			reviewMSG.Sql = stmtNode.Text()
-		}
+		reviewMSG.Sql = stmtNode.Text()
+		reviewMSG.ResetHaveErrorAndWarning()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
 

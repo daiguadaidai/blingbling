@@ -6,6 +6,7 @@ import (
 	"github.com/juju/errors"
 	"fmt"
 	"github.com/daiguadaidai/blingbling/config"
+	log "github.com/cihub/seelog"
 )
 
 type Instance struct {
@@ -43,6 +44,12 @@ func (this *Instance) CloseDB() error {
 
 	if this.DB != nil {
 		err = this.DB.Close()
+		if err != nil {
+			log.Errorf("警告: 链接实例检测表相关信息. 关闭连接出错 %v:%v/%v",
+				this.DBconfig.Host,
+				this.DBconfig.Port,
+				this.DBconfig.Database)
+		}
 	}
 
 	return err

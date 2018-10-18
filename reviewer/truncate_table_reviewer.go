@@ -8,6 +8,8 @@ import (
 )
 
 type TruncateTableReviewer struct {
+	ReviewMSG *ReviewMSG
+
 	StmtNode *ast.TruncateTableStmt
 	ReviewConfig *config.ReviewConfig
 	DBConfig *config.DBConfig
@@ -16,6 +18,8 @@ type TruncateTableReviewer struct {
 }
 
 func (this *TruncateTableReviewer) Init() {
+	this.ReviewMSG = NewReivewMSG()
+
 	if this.StmtNode.Table.Schema.String() != "" {
 		this.SchemaName = this.StmtNode.Table.Schema.String()
 	} else {
@@ -25,47 +29,45 @@ func (this *TruncateTableReviewer) Init() {
 }
 
 func (this *TruncateTableReviewer) Review() *ReviewMSG {
-	var reviewMSG *ReviewMSG
+	this.Init()
 
 	if !this.ReviewConfig.RuleAllowTruncateTable {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = config.MSG_ALLOW_TRUNCATE_TABLE_ERROR
+		msg := config.MSG_ALLOW_TRUNCATE_TABLE_ERROR
+		this.ReviewMSG.AppendMSG(true, msg)
 
-		return reviewMSG
+		return this.ReviewMSG
 	}
 
 	// 链接数据库检测实例相关信息
-	reviewMSG = this.DetectInstanceTable()
-	if reviewMSG != nil {
-		return reviewMSG
+	haveError := this.DetectInstanceTable()
+	if haveError {
+		return this.ReviewMSG
 	}
 
-	reviewMSG = new(ReviewMSG)
-	reviewMSG.Code = REVIEW_CODE_SUCCESS
-	reviewMSG.MSG = "审核成功"
-
-	return reviewMSG
+	return this.ReviewMSG
 }
 
 // 链接到实例检测相关信息
-func (this *TruncateTableReviewer) DetectInstanceTable() *ReviewMSG {
-	var reviewMSG *ReviewMSG
+func (this *TruncateTableReviewer) DetectInstanceTable() (haveError bool) {
+	var msg string
 
 	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
 	err := tableInfo.OpenInstance()
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
-		return reviewMSG
+		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
+		this.ReviewMSG.AppendMSG(haveError, msg)
+		tableInfo.CloseInstance()
+		return
 	}
 
 	// 表不存在报错
-	reviewMSG = DetectTableNotExistsByName(tableInfo, this.SchemaName, this.StmtNode.Table.Name.String())
-	if reviewMSG != nil {
-		return CloseTableInstance(reviewMSG, tableInfo)
+	haveError, msg = DetectTableNotExistsByName(tableInfo, this.SchemaName, this.StmtNode.Table.Name.String())
+	haveMSG := this.ReviewMSG.AppendMSG(haveError, msg)
+	if haveError || haveMSG {
+		tableInfo.CloseInstance()
+		return
 	}
 
-	return CloseTableInstance(reviewMSG, tableInfo)
+	tableInfo.CloseInstance()
+	return
 }

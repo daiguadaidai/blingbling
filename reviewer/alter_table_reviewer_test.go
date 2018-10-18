@@ -76,7 +76,7 @@ add (
 
 		for _, reviewMSG := range reviewMSGs {
 			if reviewMSG != nil {
-				fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+				fmt.Println(reviewMSG.String())
 			}
 		}
 
@@ -247,7 +247,7 @@ alter table employees add column age1 int not null default 0 comment 'aaaa'
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 
 }
@@ -278,7 +278,7 @@ ALTER TABLE emp
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 	}
 
 }
@@ -304,7 +304,45 @@ func TestAlterTableReviewer_Review_1(t *testing.T) {
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v\n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
+	}
+
+}
+
+func TestAlterTableReviewer_Review_2(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+	sql := `
+alter table app_oms_prom_goods_flow_4h_hr_partition
+    add (
+        cate1_id bigint(20) not null default 0 comment '一级类目id' ,
+        cate2_id bigint(20) not null default 0 comment '二级类目id' ,
+        cate3_id bigint(20) not null default 0 comment '三级类目id' ,
+        sold_cnt_std bigint(20) not null default 0 comment '历史销量' ,
+        sold_cnt_rnk bigint(20) not null default 0 comment '历史销量排序'
+    ),
+    add index idx_cate ( cate1_id, cate2_id, cate3_id, sold_cnt_rnk)
+`
+	fmt.Sprintf("%v", sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+		return
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		reviewMSG.ResetHaveErrorAndWarning()
+		fmt.Println(reviewMSG.String())
 	}
 
 }

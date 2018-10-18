@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"github.com/daiguadaidai/blingbling/config"
 	"strings"
-	"strconv"
 	"github.com/dlclark/regexp2"
 	"crypto/md5"
 	"github.com/daiguadaidai/blingbling/dao"
@@ -17,36 +16,34 @@ import (
 Params:
 	_name: 需要检测的名字
  */
-func DetectNameLength(_name string, _length int) *ReviewMSG {
+func DetectNameLength(_name string, _length int) (haveError bool, msg string) {
 	if len(_name) > _length {
-		return &ReviewMSG{
-			MSG: fmt.Sprintf(
-				"检测失败: %v. 名称: %v",
-				fmt.Sprintf(config.MSG_NAME_LENGTH_ERROR, _length),
-				_name,
-			),
-		}
+		haveError = true
+		msg = fmt.Sprintf(
+			"检测失败: %v. 名称: %v",
+			fmt.Sprintf(config.MSG_NAME_LENGTH_ERROR, _length),
+			_name,
+		)
 	}
 
-	return nil
+	return
 }
 
 /* 检测名字是否合法
 Params:
 	_name: 需要检测的名字
  */
-func DetectNameReg(_name string, _reg string) *ReviewMSG {
+func DetectNameReg(_name string, _reg string) (haveError bool, msg string) {
 	// 使用正则表达式匹配名称
 	re := regexp2.MustCompile(_reg, 0)
 	if isMatch, _ := re.MatchString(_name); !isMatch {
-		return &ReviewMSG{
-			MSG: fmt.Sprintf("检测失败. %v. 名称: %v, ",
-				fmt.Sprintf(config.MSG_NAME_REG_ERROR, _reg),
-				_name),
-		}
+		haveError = true
+		msg = fmt.Sprintf("检测失败. %v. 名称: %v, ",
+			fmt.Sprintf(config.MSG_NAME_REG_ERROR, _reg),
+			_name)
 	}
 
-	return nil
+	return
 }
 
 /* 检测数据库的字符集
@@ -54,9 +51,7 @@ Params:
     _charset: 需要审核的字符集
     _allowCharsetStr: 允许的字符集 字符串 "utf8,gbk,utf8mb4"
  */
-func DetectCharset(_charset string, _allowCharsetStr string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectCharset(_charset string, _allowCharsetStr string) (haveError bool, msg string) {
 	allowCharsets := strings.Split(_allowCharsetStr, ",") // 获取允许的字符集数组
 	isMatch := false
 	// 将需要检测的字符集 和 允许的字符集进行循环比较
@@ -68,14 +63,14 @@ func DetectCharset(_charset string, _allowCharsetStr string) *ReviewMSG {
 	}
 
 	if !isMatch {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf(
+		haveError = true
+		msg = fmt.Sprintf(
 			"字符类型检测失败: %v",
 			fmt.Sprintf(config.MSG_CHARSET_ERROR, _allowCharsetStr),
 		)
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 检测数据库的Collate
@@ -83,9 +78,7 @@ Params:
     _collate: 需要审核的字符集
     _allowCollateStr: 允许的 collate 字符串 "utf8_general_ci,utf8mb4_general_ci"
  */
-func DetectCollate(_collate string, _allowCollateStr string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectCollate(_collate string, _allowCollateStr string) (haveError bool, msg string) {
 	allowCollates := strings.Split(_allowCollateStr, ",") // 获取允许的Collate数组
 	isMatch := false
 	// 将需要检测的collate 和 允许的字符集进行循环比较
@@ -97,14 +90,14 @@ func DetectCollate(_collate string, _allowCollateStr string) *ReviewMSG {
 	}
 
 	if !isMatch {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf(
+		haveError = true
+		msg = fmt.Sprintf(
 			"Collate 类型检测失败: %v",
 			fmt.Sprintf(config.MSG_COLLATE_ERROR, _allowCollateStr),
 		)
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 检测数据库允许的存储引擎
@@ -112,9 +105,7 @@ Params:
     _engine: 需要审核的存储引擎
     _allowEngineStr: 允许的存储引擎
  */
-func DetectEngine(_engine string, _allowEngineStr string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectEngine(_engine string, _allowEngineStr string) (haveError bool, msg string) {
 	allowEngines := strings.Split(_allowEngineStr, ",") // 获取允许的存储引擎
 	isMatch := false
 	// 将需要检测的collate 和 允许的字符集进行循环比较
@@ -126,44 +117,14 @@ func DetectEngine(_engine string, _allowEngineStr string) *ReviewMSG {
 	}
 
 	if !isMatch {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf(
+		haveError = true
+		msg = fmt.Sprintf(
 			"存储引擎 类型检测失败: %v",
 			fmt.Sprintf(config.MSG_TABLE_ENGINE_ERROR, _allowEngineStr),
 		)
 	}
 
-	return reviewMSG
-}
-
-/* 检测不允许的字段类型
-Params:
-    _type: 需要审核的字段类型
-    _notAllowTypeStr: 不允许的字段类型
- */
-func DetectNotAllowColumnType(_type byte, _notAllowTypeSrt string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
-	notAllowTypes := strings.Split(_notAllowTypeSrt, ",") // 获取不允许的字段类型
-	isMatch := false
-	fmt.Println(strconv.Itoa(int(_type)), notAllowTypes)
-	// 将需要检测的collate 和 允许的字符集进行循环比较
-	for _, notAllowType := range notAllowTypes {
-		if strconv.Itoa(int(_type)) == notAllowType {
-			isMatch = true
-			break
-		}
-	}
-
-	if isMatch {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.MSG = fmt.Sprintf(
-			"字段检测失败: %v",
-			fmt.Sprintf(config.MSG_NOT_ALLOW_COLUMN_TYPE_ERROR, _notAllowTypeSrt),
-		)
-	}
-
-	return reviewMSG
+	return
 }
 
 /* 通过所有所以和所有的唯一索引获取所有的普通索引
@@ -257,25 +218,20 @@ Params:
     _tableInfo: 库相关信息
     _dbName: 数据库名
  */
-func DetectDatabaseExistsByName(_tableInfo *dao.TableInfo, _dbName string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectDatabaseExistsByName(_tableInfo *dao.TableInfo, _dbName string) (haveError bool, msg string) {
 	// 检测实例中数据库是否存在
 	exists, err := _tableInfo.DatabaseExistsByName(_dbName)
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
-		return reviewMSG
+		msg = fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
+		return
 	}
 	if exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库 %v 已经存在.", _dbName)
-		return reviewMSG
+		haveError = true
+		msg = fmt.Sprintf("检测失败: 目标数据库 %v 已经存在.", _dbName)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 数据库不存在返回错误
@@ -283,25 +239,20 @@ Params:
     _tableInfo: 库相关信息
     _dbName: 数据库名
  */
-func DetectDatabaseNotExistsByName(_tableInfo *dao.TableInfo, _dbName string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectDatabaseNotExistsByName(_tableInfo *dao.TableInfo, _dbName string) (haveError bool, msg string) {
 	// 检测实例中数据库是否存在
 	exists, err := _tableInfo.DatabaseExistsByName(_dbName)
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
-		return reviewMSG
+		msg := fmt.Sprintf("警告: 检测目标实例的数据库是否存在出错. %v", err)
+		return haveError, msg
 	}
 	if !exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 目标数据库 %v 不存在.",_dbName)
-		return reviewMSG
+		haveError = true
+		msg := fmt.Sprintf("检测失败: 目标数据库 %v 不存在.",_dbName)
+		return haveError, msg
 	}
 
-	return reviewMSG
+	return
 }
 
 
@@ -311,24 +262,19 @@ Params:
     _dbName: 数据库名
     _tableName: 需要判断的表名
  */
-func DetectTableExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectTableExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) (haveError bool, msg string) {
 	exists, err := _tableInfo.TableExistsByName(_dbName, _tableName)
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
-		return reviewMSG
+		msg = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
+		return
 	}
 	if exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表 %v 已经存在.", _tableName)
-		return reviewMSG
+		haveError = true
+		msg = fmt.Sprintf("检测失败: 在数据库中表 %v 已经存在.", _tableName)
+		return
 	}
 
-	return reviewMSG
+	return
 }
 
 /* 表不否存在返回错误
@@ -337,43 +283,19 @@ Params:
     _dbName: 数据库名
     _tableName: 需要判断的表名
  */
-func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) *ReviewMSG {
-	var reviewMSG *ReviewMSG
-
+func DetectTableNotExistsByName(_tableInfo *dao.TableInfo, _dbName, _tableName string) (haveError bool, msg string) {
 	exists, err := _tableInfo.TableExistsByName(_dbName, _tableName)
 	if err != nil {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_WARNING
-		reviewMSG.MSG = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
-		return reviewMSG
+		msg = fmt.Sprintf("警告: 检测目标实例的表是否存在出错. %v", err)
+		return
 	}
 	if !exists {
-		reviewMSG = new(ReviewMSG)
-		reviewMSG.Code = REVIEW_CODE_ERROR
-		reviewMSG.MSG = fmt.Sprintf("检测失败: 在数据库中表 %v 不存在.", _tableName)
-		return reviewMSG
+		haveError = true
+		msg = fmt.Sprintf("检测失败: 在数据库中表 %v 不存在.", _tableName)
+		return
 	}
 
-	return reviewMSG
-}
-
-/* 关闭链接并返回相关审核信息
-Params:
-    _reviewMSG: 审核信息
-    _tableInfo: 链接数据库的表
- */
-func CloseTableInstance(_reviewMSG *ReviewMSG, _tableInfo *dao.TableInfo) *ReviewMSG {
-	err := _tableInfo.CloseInstance()
-	if err != nil {
-		if _reviewMSG == nil {
-			_reviewMSG = new(ReviewMSG)
-		}
-		_reviewMSG.Code = REVIEW_CODE_WARNING
-		_reviewMSG.MSG = fmt.Sprintf("警告: 链接实例检测表相关信息. 关闭连接出错. %v",
-			_reviewMSG.MSG)
-	}
-
-	return _reviewMSG
+	return
 }
 
 /* 将 delete sql 转化称 explain select sql

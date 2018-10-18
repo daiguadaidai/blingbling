@@ -44,7 +44,7 @@ WHERE a1.pt_day = '2017-09-20'
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -82,7 +82,7 @@ WHERE a1.pt_day = '2017-09-20'
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -119,7 +119,7 @@ WHERE a1.pt_day = '2017-09-20'
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -155,7 +155,7 @@ WHERE a1.pt_day = '2017-09-20'
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -187,7 +187,7 @@ SET a1.user_currday_score = a1.user_currday_increment_score + a2.user_currday_sc
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -221,7 +221,7 @@ LIMIT 1
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -252,7 +252,7 @@ UpdaTe employees sEt birth_date = '2018-01-01' where emp_no = 10001
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -289,7 +289,7 @@ WHERE id IN (
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
@@ -322,7 +322,7 @@ WHERE id between 1 and 10;
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
-		fmt.Printf("Code: %v, MSG: %v \n", reviewMSG.Code, reviewMSG.MSG)
+		fmt.Println(reviewMSG.String())
 
 		updateReview := review.(*UpdateReviewer)
 		fmt.Printf("SetSubClauseWhereCount: %v, ", updateReview.visitor.SetSubClauseWhereCount)
