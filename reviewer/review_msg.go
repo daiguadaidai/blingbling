@@ -30,7 +30,7 @@ func (this *ResponseReviewData) ToJson() string {
 }
 
 func (this *ResponseReviewData) GetErrorJson(_err error) string {
-	rs := fmt.Sprintf("{Code: %v, MSG: %v, ReviewMSG: [%v]}",
+	rs := fmt.Sprintf(`{"Code": %v, "MSG": %v, "ReviewMSGs": [%v]}`,
 		this.Code, _err, "%v")
 	reviewMSGStr := make([]string, 0, 1)
 	for _, reviewMSG := range this.ReviewMSGs {
@@ -38,6 +38,19 @@ func (this *ResponseReviewData) GetErrorJson(_err error) string {
 	}
 
 	return fmt.Sprintf(rs, strings.Join(reviewMSGStr, ","))
+}
+
+// 设置返回代码
+func (this *ResponseReviewData) ResetCode() {
+	for _, reviewMSG := range this.ReviewMSGs {
+		if reviewMSG.HaveError {
+			this.Code = REVIEW_CODE_ERROR
+			return
+		} else if reviewMSG.HaveWarning {
+			this.Code = REVIEW_CODE_WARNING
+			continue
+		}
+	}
 }
 
 type ReviewMSG struct {
@@ -84,7 +97,7 @@ func (this *ReviewMSG) AppendMSG(_haveError bool, _msg string) (haveMSG bool) {
 func (this *ReviewMSG) String() string {
 	jsonBytes, err := json.Marshal(this)
 	if err != nil {
-		return fmt.Sprintf(`{Sql: %v, HaveError: true, HaveWarning: false, ErrorMSG: [%v], WarningMSG: []}`,
+		return fmt.Sprintf(`{"Sql": %v, "HaveError": true, "HaveWarning": false, "ErrorMSG": [%v], "WarningMSG": []}`,
 			this.Sql,
 			fmt.Sprintf("审核信息转化成json时出错 %v", err))
 	}

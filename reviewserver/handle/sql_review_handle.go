@@ -20,7 +20,8 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 	requestReviewParam, err := GetRequestReviewParam(r) // 获取自定审核参数
 	if err != nil {
 		responseReviewData.Code = reviewer.REVIEW_CODE_ERROR
-		fmt.Fprintf(w, responseReviewData.GetErrorJson(err))
+		responseReviewData.MSG = fmt.Sprintf("%v", err)
+		fmt.Fprintf(w, responseReviewData.ToJson())
 		return
 	}
 
@@ -28,9 +29,13 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 	responseReviewData.ReviewMSGs = reviewMSGs
 	if err != nil {
 		responseReviewData.Code = reviewer.REVIEW_CODE_ERROR
-		fmt.Fprintf(w, responseReviewData.GetErrorJson(err))
+		responseReviewData.MSG = fmt.Sprintf("%v", err)
+		fmt.Fprintf(w, responseReviewData.ToJson())
 		return
 	}
+
+	// 修改检测的返回码 Code
+	responseReviewData.ResetCode()
 
 	fmt.Fprintf(w, responseReviewData.ToJson())
 	return
