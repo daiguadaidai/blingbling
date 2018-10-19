@@ -15,7 +15,6 @@ const (
 
 type ResponseReviewData struct {
 	Code int
-	MSG string
 	ReviewMSGs []*ReviewMSG
 }
 
@@ -30,7 +29,7 @@ func (this *ResponseReviewData) ToJson() string {
 }
 
 func (this *ResponseReviewData) GetErrorJson(_err error) string {
-	rs := fmt.Sprintf(`{"Code": %v, "MSG": %v, "ReviewMSGs": [%v]}`,
+	rs := fmt.Sprintf(`{"Code": %v, "ReviewMSGs": [%v]}`,
 		this.Code, _err, "%v")
 	reviewMSGStr := make([]string, 0, 1)
 	for _, reviewMSG := range this.ReviewMSGs {

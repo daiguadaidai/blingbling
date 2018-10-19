@@ -211,7 +211,6 @@ tcp6       0      0 :::19527                :::*                    LISTEN      
 ```
 {
     "Code": 0,
-    "MSG": "",
     "ReviewMSGs": [
         {
             "Sql": "alter table employees add column age1 int not null;",
@@ -244,9 +243,7 @@ tcp6       0      0 :::19527                :::*                    LISTEN      
 
     - **2:** 审核程序失败
 
-2. **MSG:** 审核程序执行成功状态返回的信息
-
-3. **ReviewMSGs:** 所有审核程序, 当输入多个sql语句是, 则有多个审核消息.
+2. **ReviewMSGs:** 所有审核程序, 当输入多个sql语句是, 则有多个审核消息.
 
     - **Sql:** 审核的sql
 
@@ -403,7 +400,6 @@ curl http://127.0.0.1:19527/ClientParams
 curl -X POST http://10.10.10.55:19527/sqlReview -d '{"Host":"10.10.10.21", "Port":3307, "Username":"root", "Password":"root", "Database":"employees", "Sqls":"alter table employees add column age1 int not null; delete from employees WHERE id = 1;"}'
 {
     "Code": 0,
-    "MSG": "",
     "ReviewMSGs": [
         {
             "Sql": "alter table employees add column age1 int not null;",
@@ -434,7 +430,6 @@ curl -X POST http://10.10.10.55:19527/sqlReview -d '{"Host":"10.10.10.21", "Port
 curl "http://10.10.10.55:19527/sqlReview?Host=10.10.10.21&Port=3307&Username=HH&Password=oracle12&Database=employees&Sqls=alter%20table%20employees%20add%20column%20age1%20int%20not%20null"
 {
     "Code": 0,
-    "MSG": "",
     "ReviewMSGs": [
         {
             "Sql": "alter table employees add column age1 int not null",
@@ -729,7 +724,7 @@ r = requests.post(url, json = data)
 
 print(r.text)
 # 输出
-{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column age1 int not null comment \"年龄\"","HaveError":true,"HaveWarning":false,"ErrorMSGs":["字段名 检测失败. 命名规则: ^_[a-z\\$_][a-z\\$\\d_]*$. 名称: age1, "],"WarningMSGs":[]}]}
+{"Code":0,"ReviewMSGs":[{"Sql":"alter table employees add column age1 int not null comment \"年龄\"","HaveError":true,"HaveWarning":false,"ErrorMSGs":["字段名 检测失败. 命名规则: ^_[a-z\\$_][a-z\\$\\d_]*$. 名称: age1, "],"WarningMSGs":[]}]}
 
 
 # 将sql语句该为以下划线(_)命名的将审核通过
@@ -737,7 +732,7 @@ data['Sqls'] = 'alter table employees add column _age1 int not null comment "年
 r = requests.post(url, json = data)
 print(r.text)
 # 输出
-{"Code":0,"MSG":"","ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","HaveError":false,"HaveWarning":true,"ErrorMSGs":[],"WarningMSGs":["警告: 检测目标实例的数据库是否存在出错. Error 1045: Access denied for user 'root'@'10.10.10.55' (using password: YES)"]}]}
+{"Code":0,"ReviewMSGs":[{"Sql":"alter table employees add column _age1 int not null comment \"年龄\"","HaveError":false,"HaveWarning":true,"ErrorMSGs":[],"WarningMSGs":["警告: 检测目标实例的数据库是否存在出错. Error 1045: Access denied for user 'root'@'10.10.10.55' (using password: YES)"]}]}
 ```
 
 > **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数--必须--是同时出现的.

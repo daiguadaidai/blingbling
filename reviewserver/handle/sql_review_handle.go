@@ -19,20 +19,22 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 	responseReviewData := new(reviewer.ResponseReviewData)
 	requestReviewParam, err := GetRequestReviewParam(r) // 获取自定审核参数
 	if err != nil {
+		reviewMSGs := make([]*reviewer.ReviewMSG, 0, 1)
+
+		reviewMSG := reviewer.NewReivewMSG()
+		reviewMSG.HaveError = true
+		reviewMSG.AppendMSG(reviewMSG.HaveError, fmt.Sprintf("%v", err))
+
+		reviewMSGs = append(reviewMSGs, reviewMSG)
+
 		responseReviewData.Code = reviewer.REVIEW_CODE_ERROR
-		responseReviewData.MSG = fmt.Sprintf("%v", err)
+		responseReviewData.ReviewMSGs = reviewMSGs
 		fmt.Fprintf(w, responseReviewData.ToJson())
 		return
 	}
 
-	reviewMSGs, err := StartReview(requestReviewParam)
+	reviewMSGs := StartReview(requestReviewParam)
 	responseReviewData.ReviewMSGs = reviewMSGs
-	if err != nil {
-		responseReviewData.Code = reviewer.REVIEW_CODE_ERROR
-		responseReviewData.MSG = fmt.Sprintf("%v", err)
-		fmt.Fprintf(w, responseReviewData.ToJson())
-		return
-	}
 
 	// 修改检测的返回码 Code
 	responseReviewData.ResetCode()
@@ -100,7 +102,7 @@ Return:
 	int: 审核状态码
 	string: 审核相关信息, 如果成功是成功信息, 如果失败是失败信息
  */
-func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, error) {
+func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG) {
 	reviewConfig := _requestParam.GetReviewConfig() // 获取审核参数
 	dbConfig := _requestParam.GetDBConfig() // 链接数据库配置
 
@@ -111,8 +113,14 @@ func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, erro
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(_requestParam.Sqls, "", "")
 	if err != nil {
-		errMSG := fmt.Sprintf("sql语法错误: %v", err)
-		return reviewMSGs, errors.New(errMSG)
+		reviewMSG := reviewer.NewReivewMSG()
+		reviewMSG.HaveError = true
+		reviewMSG.Sql = _requestParam.Sqls
+		reviewMSG.AppendMSG(reviewMSG.HaveError, fmt.Sprintf("sql语法错误: %v", err))
+
+		reviewMSGs = append(reviewMSGs, reviewMSG)
+
+		return reviewMSGs
 	}
 
 	for _, stmtNode := range stmtNodes {
@@ -132,6 +140,5 @@ func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG, erro
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
 
-	// 将审核信息转化为 JSON 字符串
-	return reviewMSGs, nil
+	return reviewMSGs
 }
