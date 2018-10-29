@@ -34,7 +34,7 @@ const (
 	// 索引字段个数
 	RULE_INDEX_COLUMN_COUNT = 5
 	// 表名  命名规范
-	RULE_TABLE_NAME_GRE = `(?i)^(?!taishan)[a-z\$_][a-z\$\d_]*$`
+	RULE_TABLE_NAME_GRE = `(?i)^[a-z\$_][a-z\$\d_]*$`
 	// 索引命名规范
 	RULE_INDEX_NAME_REG = `^idx_[a-z\$\d_]*$`
 	// 唯一索引命名规范
