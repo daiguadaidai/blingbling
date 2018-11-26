@@ -1,10 +1,11 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/parser"
 )
 
 func TestDeleteReviewer_Review(t *testing.T) {
@@ -36,9 +37,9 @@ func TestDeleteReviewer_Review(t *testing.T) {
                AND t5.is_delete = 0
         )
     `
-    fmt.Sprintf(sql)
+	fmt.Sprintf(sql)
 
-    sql1 := `
+	sql1 := `
     DELETE FROM t1 WHERE name = 1 and age = 2 and (ttt = 'a' or ttt = 'b') and kinn > 'HH'
     `
 	fmt.Sprintf(sql1)
@@ -55,7 +56,7 @@ func TestDeleteReviewer_Review(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -83,7 +84,7 @@ delete from employees WHERE emp_no = 1
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)

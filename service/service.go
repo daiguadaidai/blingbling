@@ -1,10 +1,12 @@
 package service
 
 import (
+	"sync"
+
 	log "github.com/cihub/seelog"
+
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/reviewserver"
-	"sync"
 )
 
 func Run(_httpServerConfig *config.HttpServerConfig, _config *config.ReviewConfig) {

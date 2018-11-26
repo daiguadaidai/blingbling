@@ -2,11 +2,13 @@ package reviewserver
 
 import (
 	"fmt"
-	log "github.com/cihub/seelog"
-	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/reviewserver/handle"
 	"net/http"
 	"sync"
+
+	log "github.com/cihub/seelog"
+
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/reviewserver/handle"
 )
 
 /* 启动Http服务

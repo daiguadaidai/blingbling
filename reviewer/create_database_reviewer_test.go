@@ -1,10 +1,11 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/parser"
 )
 
 func TestCreateDatabaseReviewer_Review(t *testing.T) {
@@ -24,7 +25,7 @@ func TestCreateDatabaseReviewer_Review(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, "")
+	dbConfig := config.NewDBConfig(host, port, username, password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -39,5 +40,3 @@ func TestCreateDatabaseReviewer_Review(t *testing.T) {
 		}
 	}
 }
-
-

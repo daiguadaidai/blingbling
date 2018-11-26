@@ -3,13 +3,14 @@ package reviewer
 import (
 	"crypto/md5"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/daiguadaidai/blingbling/common"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/dlclark/regexp2"
 	"github.com/juju/errors"
-	"regexp"
-	"strings"
 )
 
 /* 检测名称长度是否合法

@@ -1,8 +1,6 @@
 package reviewer
 
-import (
-	"github.com/daiguadaidai/blingbling/ast"
-)
+import "github.com/daiguadaidai/blingbling/ast"
 
 type DeleteVisitor struct {
 	IsMultiTable         bool

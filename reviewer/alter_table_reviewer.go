@@ -2,12 +2,13 @@ package reviewer
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/common"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
-	"strings"
 )
 
 type AlterTableReviewer struct {

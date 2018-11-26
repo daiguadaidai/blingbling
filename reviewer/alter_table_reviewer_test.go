@@ -2,10 +2,11 @@ package reviewer
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/parser"
-	"testing"
 )
 
 func TestAlterTableReviewer_Review(t *testing.T) {

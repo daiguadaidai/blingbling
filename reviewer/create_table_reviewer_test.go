@@ -1,12 +1,13 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
-	"github.com/daiguadaidai/blingbling/config"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/ast"
+	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
+	"github.com/daiguadaidai/blingbling/parser"
 )
 
 func TestCreateTableReviewer_Review(t *testing.T) {
@@ -46,7 +47,7 @@ CREATE TABLE test.t1 (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -127,7 +128,6 @@ CREATE TABLE test.t1 (
 		}
 	}
 }
-
 
 func TestCreateTableReviewer_Review_Partition_range(t *testing.T) {
 	sql := `
@@ -217,7 +217,7 @@ PARTITION p201303172 VALUES LESS THAN ('2013-03-17','m3')
 			// partition 定义
 			for _, definition := range createTableStmt.Partition.Definitions {
 				fmt.Printf("partition definition： %v, %v, %v \n",
-				definition.Name, definition.Comment, definition.MaxValue)
+					definition.Name, definition.Comment, definition.MaxValue)
 			}
 		} else {
 			fmt.Println("不是分区表")
@@ -272,7 +272,6 @@ PARTITION p201303172 VALUES LESS THAN ('2013-03-17')
 			}
 			fmt.Println("column Names:", partitionColumnName)
 
-
 			// partition 定义
 			for _, definition := range createTableStmt.Partition.Definitions {
 				fmt.Printf("partition definition： %v, %v, %v \n",
@@ -283,7 +282,6 @@ PARTITION p201303172 VALUES LESS THAN ('2013-03-17')
 		}
 	}
 }
-
 
 func TestCreateTableReviewer_Review_Partition(t *testing.T) {
 	var host string = "10.10.10.12"
@@ -331,7 +329,7 @@ CREATE TABLE test.mf_fd_cache (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, "")
+	dbConfig := config.NewDBConfig(host, port, username, password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -400,8 +398,6 @@ CREATE TABLE test.mf_fd_cache (
 			}
 			fmt.Println("column Name:", column.Name.String(), optionTypes)
 		}
-
-
 
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
@@ -440,7 +436,7 @@ PARTITION BY LIST(store_id) (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, "")
+	dbConfig := config.NewDBConfig(host, port, username, password, "")
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -510,8 +506,6 @@ PARTITION BY LIST(store_id) (
 			fmt.Println("column Name:", column.Name.String(), optionTypes)
 		}
 
-
-
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSGs = append(reviewMSGs, reviewMSG)
@@ -539,7 +533,7 @@ func TestCreateTableReviewer_Review_Like(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -591,7 +585,7 @@ create table cps_transfer_flow_127 (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
