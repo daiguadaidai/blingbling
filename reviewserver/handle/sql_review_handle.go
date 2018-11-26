@@ -1,14 +1,14 @@
 package handle
 
 import (
-	"net/http"
-	"fmt"
-	"github.com/daiguadaidai/blingbling/reviewer"
-	"github.com/daiguadaidai/blingbling/parser"
-	"github.com/juju/errors"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"github.com/daiguadaidai/blingbling/parser"
+	"github.com/daiguadaidai/blingbling/reviewer"
 	"github.com/gorilla/schema"
+	"github.com/juju/errors"
+	"io/ioutil"
+	"net/http"
 )
 
 func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +106,7 @@ Return:
  */
 func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG) {
 	reviewConfig := _requestParam.GetReviewConfig() // 获取审核参数
-	dbConfig := _requestParam.GetDBConfig() // 链接数据库配置
+	dbConfig := _requestParam.GetDBConfig()         // 链接数据库配置
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
 	reviewMSGs := make([]*reviewer.ReviewMSG, 0, 1)

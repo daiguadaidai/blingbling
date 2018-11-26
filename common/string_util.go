@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/dlclark/regexp2"
 	"strings"
+
+	"github.com/dlclark/regexp2"
 )
 
 /* 字符串匹配

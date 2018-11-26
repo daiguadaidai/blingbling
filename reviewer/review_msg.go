@@ -14,7 +14,7 @@ const (
 )
 
 type ResponseReviewData struct {
-	Code int
+	Code       int
 	ReviewMSGs []*ReviewMSG
 }
 
@@ -53,16 +53,16 @@ func (this *ResponseReviewData) ResetCode() {
 }
 
 type ReviewMSG struct {
-	Sql string
-	HaveError bool
+	Sql         string
+	HaveError   bool
 	HaveWarning bool
-	ErrorMSGs []string
+	ErrorMSGs   []string
 	WarningMSGs []string
 }
 
 func NewReivewMSG() *ReviewMSG {
 	return &ReviewMSG{
-		ErrorMSGs: make([]string, 0, 1),
+		ErrorMSGs:   make([]string, 0, 1),
 		WarningMSGs: make([]string, 0, 1),
 	}
 }
@@ -103,5 +103,3 @@ func (this *ReviewMSG) String() string {
 
 	return string(jsonBytes)
 }
-
-

@@ -1,11 +1,12 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+
+	"github.com/daiguadaidai/blingbling/ast"
 )
 
-type CreateTableVisitor struct{
+type CreateTableVisitor struct {
 }
 
 func NewCreateTableVisitor() *CreateTableVisitor {

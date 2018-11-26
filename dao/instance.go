@@ -2,16 +2,16 @@ package dao
 
 import (
 	"database/sql"
+	"fmt"
+	log "github.com/cihub/seelog"
+	"github.com/daiguadaidai/blingbling/config"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/juju/errors"
-	"fmt"
-	"github.com/daiguadaidai/blingbling/config"
-	log "github.com/cihub/seelog"
 )
 
 type Instance struct {
 	DBconfig *config.DBConfig
-	DB *sql.DB
+	DB       *sql.DB
 }
 
 /* 新建一个数据库执行器
@@ -19,7 +19,7 @@ Params:
     _dbConfig: 数据库配置
  */
 func NewInstance(_dbConfig *config.DBConfig) *Instance {
-	executor := &Instance {DBconfig: _dbConfig}
+	executor := &Instance{DBconfig: _dbConfig}
 
 	return executor
 }

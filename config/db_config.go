@@ -33,7 +33,7 @@ func NewDBConfig(
 	_password string,
 	_database string,
 ) *DBConfig {
-	dbConfig := &DBConfig {
+	dbConfig := &DBConfig{
 		Username:          _username,
 		Password:          _password,
 		Host:              _host,
@@ -49,7 +49,6 @@ func NewDBConfig(
 
 	return dbConfig
 }
-
 
 func (this *DBConfig) GetDataSource() string {
 	dataSource := fmt.Sprintf(

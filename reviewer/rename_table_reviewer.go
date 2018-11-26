@@ -1,18 +1,19 @@
 package reviewer
 
 import (
-"github.com/daiguadaidai/blingbling/ast"
-	"github.com/daiguadaidai/blingbling/config"
 	"fmt"
+
+	"github.com/daiguadaidai/blingbling/ast"
+	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type RenameTableReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.RenameTableStmt
+	StmtNode     *ast.RenameTableStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
+	DBConfig     *config.DBConfig
 }
 
 func (this *RenameTableReviewer) Init() {
@@ -24,13 +25,13 @@ func (this *RenameTableReviewer) Review() *ReviewMSG {
 
 	// 禁止使用 rename
 	if !this.ReviewConfig.RuleAllowRenameTable {
-		 this.ReviewMSG.AppendMSG(true, config.MSG_ALLOW_RENAME_TABLE_ERROR)
+		this.ReviewMSG.AppendMSG(true, config.MSG_ALLOW_RENAME_TABLE_ERROR)
 		return this.ReviewMSG
 	}
 
 	// 允许使用rename
 	// 循环一个语句中需要rename的所有表, 如: rename t1 to tt2, t2 to tt2;
-	for _, tableToTable := range this.StmtNode.TableToTables{
+	for _, tableToTable := range this.StmtNode.TableToTables {
 
 		// 检测数据库名称长度
 		haveError := this.DetectDBNameLength(tableToTable.NewTable.Schema.String())

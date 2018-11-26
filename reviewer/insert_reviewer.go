@@ -1,8 +1,9 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 )
@@ -10,11 +11,11 @@ import (
 type InsertReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.InsertStmt
+	StmtNode     *ast.InsertStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
-	SchemaName string
-	TableName string
+	DBConfig     *config.DBConfig
+	SchemaName   string
+	TableName    string
 }
 
 func (this *InsertReviewer) Init() {
@@ -86,7 +87,7 @@ func (this *InsertReviewer) DetectAllowNoColumns() (haveError bool) {
 }
 
 // 检测是否允许使用 insert ignore
-func (this * InsertReviewer) DetectAllowInsertIgnore() (haveError bool) {
+func (this *InsertReviewer) DetectAllowInsertIgnore() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertIgnore && this.StmtNode.IgnoreErr {
 		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_IGNORE_ERROR)
 		haveError = true
@@ -98,7 +99,7 @@ func (this * InsertReviewer) DetectAllowInsertIgnore() (haveError bool) {
 }
 
 // 检测是否允许使用 replace into
-func (this * InsertReviewer) DetectAllowInsertReplace() (haveError bool) {
+func (this *InsertReviewer) DetectAllowInsertReplace() (haveError bool) {
 	if !this.ReviewConfig.RuleAllowInsertReplace && this.StmtNode.IsReplace {
 		msg := fmt.Sprintf("检测失败. %v", config.MSG_ALLOW_INSERT_REPLIACE_ERROR)
 		haveError = true
@@ -203,7 +204,7 @@ func (this *InsertReviewer) DetectFromInstance() (haveError bool) {
 	// 获取原表的建表语句
 	err = tableInfo.InitCreateTableSql(this.SchemaName, this.TableName)
 	if err != nil {
-		msg := fmt.Sprintf("警告: 该Insert语法正确. " +
+		msg := fmt.Sprintf("警告: 该Insert语法正确. "+
 			"但是无法获取到源表建表sql. %v", err)
 		this.ReviewMSG.AppendMSG(false, msg)
 		tableInfo.CloseInstance()
@@ -213,7 +214,7 @@ func (this *InsertReviewer) DetectFromInstance() (haveError bool) {
 
 	err = tableInfo.ParseCreateTableInfo()
 	if err != nil {
-		msg := fmt.Sprintf("警告: 该Insert语法正确. 解析原表建表语句错误. 无法对比" +
+		msg := fmt.Sprintf("警告: 该Insert语法正确. 解析原表建表语句错误. 无法对比"+
 			"%v", err)
 		this.ReviewMSG.AppendMSG(false, msg)
 		tableInfo.CloseInstance()

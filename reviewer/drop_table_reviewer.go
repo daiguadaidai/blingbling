@@ -1,18 +1,19 @@
 package reviewer
 
 import (
-"github.com/daiguadaidai/blingbling/ast"
+	"fmt"
+
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
-	"fmt"
 )
 
 type DropTableReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.DropTableStmt
+	StmtNode     *ast.DropTableStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
+	DBConfig     *config.DBConfig
 }
 
 func (this *DropTableReviewer) Init() {

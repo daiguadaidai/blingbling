@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"bytes"
 	"net/http"
+
 	"github.com/daiguadaidai/blingbling/reviewer"
 	"github.com/liudng/godump"
 )
@@ -22,7 +23,7 @@ func main() {
 	// 变成Json格式
 	jsonParams, err := json.Marshal(params)
 	if err != nil {
-		fmt.Println(err.Error() )
+		fmt.Println(err.Error())
 		return
 	}
 

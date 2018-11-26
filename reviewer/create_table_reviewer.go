@@ -1,38 +1,39 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/config"
 	"strings"
-	"github.com/daiguadaidai/blingbling/dependency/mysql"
+
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/common"
+	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
+	"github.com/daiguadaidai/blingbling/dependency/mysql"
 )
 
 type CreateTableReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.CreateTableStmt
-	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
-	ColumnNames map[string]bool
-	PKColumnNames map[string]bool // 所有主键列名
-	PKname string // 主键名
-	AutoIncrementName string  // 子增字段名
+	StmtNode          *ast.CreateTableStmt
+	ReviewConfig      *config.ReviewConfig
+	DBConfig          *config.DBConfig
+	ColumnNames       map[string]bool
+	PKColumnNames     map[string]bool // 所有主键列名
+	PKname            string          // 主键名
+	AutoIncrementName string          // 子增字段名
 	/* 定义所有索引
 	map {
 		idx_xxx: ["id", "name"]
 	}
 	*/
-	Indexes map[string][]string
-	UniqueIndexes map[string][]string // 所有的唯一索引
-	HasTableComment bool // 有表注释
-	NotAllowColumnTypeMap map[string]bool // 不允许的字段类型
-	NotNullColumnTypeMap map[string]bool // 必须为not null的字段类型
-	NotNullColumnNameMap map[string]bool // 必须为 not null的字段名称
-	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
-	PartitionColumns []string
+	Indexes                 map[string][]string
+	UniqueIndexes           map[string][]string // 所有的唯一索引
+	HasTableComment         bool                // 有表注释
+	NotAllowColumnTypeMap   map[string]bool     // 不允许的字段类型
+	NotNullColumnTypeMap    map[string]bool     // 必须为not null的字段类型
+	NotNullColumnNameMap    map[string]bool     // 必须为 not null的字段名称
+	ColumnTypeCount         map[byte]int        // 保存字段类型出现的个数
+	PartitionColumns        []string
 	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
 
 	SchemaName string
@@ -103,7 +104,6 @@ func (this *CreateTableReviewer) Review() *ReviewMSG {
 			return this.ReviewMSG
 		}
 	}
-
 
 	return this.ReviewMSG
 }
@@ -394,7 +394,7 @@ func (this *CreateTableReviewer) DetectColumnPKReDefine() (haveError bool) {
 		for name, _ := range this.PKColumnNames {
 			columnNames = append(columnNames, name)
 		}
-		msg := fmt.Sprintf("检测失败. 有两个字段都定义了主键(%v). " +
+		msg := fmt.Sprintf("检测失败. 有两个字段都定义了主键(%v). "+
 			"请考虑使用定于约束字句定义组合主键", strings.Join(columnNames, ", "))
 		haveError = true
 		this.ReviewMSG.AppendMSG(haveError, msg)
@@ -465,7 +465,7 @@ func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
 		for _, indexName := range constraint.Keys {
 			// 检测 索引/约束 中有重复字段
 			if _, ok := indexColumnNameMap[indexName.Column.String()]; ok {
-				msg = fmt.Sprintf("检测失败. 同一个 索引/约束 中有同一个重复字段. " +
+				msg = fmt.Sprintf("检测失败. 同一个 索引/约束 中有同一个重复字段. "+
 					"索引/约束: %v, 重复的字段名: %v",
 					constraint.Name, indexName.Column.String())
 				haveError = true
@@ -477,7 +477,7 @@ func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
 
 			// 检测索引字段需要在表的字段中
 			if _, ok := this.ColumnNames[indexName.Column.String()]; !ok {
-				msg = fmt.Sprintf("检测失败. 索引字段没定义. 索引/约束: %v, " +
+				msg = fmt.Sprintf("检测失败. 索引字段没定义. 索引/约束: %v, "+
 					"字段: %v, 不存在表: %v 中 ",
 					constraint.Name, indexName.Column.String(), this.StmtNode.Table.Name.String())
 				haveError = true
@@ -616,8 +616,8 @@ func (this *CreateTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Con
 // 检测字段 相关信息
 func (this *CreateTableReviewer) DetectColumnOptions() (haveError bool) {
 	for _, column := range this.StmtNode.Cols {
-		var isNotNull bool = false // 该字段是否为 not null
-		var hasDefaultValue bool = false // 是否有默认值
+		var isNotNull bool = false        // 该字段是否为 not null
+		var hasDefaultValue bool = false  // 是否有默认值
 		var hasColumnComment bool = false // 用于检测字段的注释是否指定
 
 		// 获取字段是否 not null, 是否有默认值
@@ -726,7 +726,6 @@ func (this *CreateTableReviewer) DetectColumnOptions() (haveError bool) {
 	return
 }
 
-
 // 检测Text字段类型使用个数
 func (this *CreateTableReviewer) DetectTextColumnTypeCount() (haveError bool) {
 	if count, ok := this.ColumnTypeCount[mysql.TypeBlob]; ok {
@@ -803,7 +802,7 @@ func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() (haveError b
 		}
 
 		for normalIndexName, hashNormalIndexStr := range hashNormalIndex {
-			if isMatch := common.StrIsMatch(hashNormalIndexStr, hashUniqueIndexStr) ; isMatch {
+			if isMatch := common.StrIsMatch(hashNormalIndexStr, hashUniqueIndexStr); isMatch {
 				msg := fmt.Sprintf("检测失败. 普通索引: %v, 包含了唯一索引: %v 的字段.",
 					normalIndexName, uniqueIndexName)
 				this.ReviewMSG.AppendMSG(haveError, msg)
@@ -833,7 +832,7 @@ func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
 					case *ast.ColumnNameExpr:
 						this.PartitionColumns = append(this.PartitionColumns, expr2.Name.String())
 					default:
-						msg := fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, " +
+						msg := fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, "+
 							"请联系DBA. 第二层: %T", this.StmtNode.Partition.Expr)
 						haveError = true
 						this.ReviewMSG.AppendMSG(haveError, msg)
@@ -841,7 +840,7 @@ func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
 					}
 				}
 			default:
-				msg := fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, " +
+				msg := fmt.Sprintf("接测分区表错误. 不能识别指定的分区字段类型, "+
 					"请联系DBA. 第一层: %T", this.StmtNode.Partition.Expr)
 				haveError = true
 				this.ReviewMSG.AppendMSG(haveError, msg)
@@ -942,7 +941,7 @@ func (this *CreateTableReviewer) DetectDuplecateIndex() (haveError bool) {
 			if normalIndexName1 == normalIndexName2 { // 同一个索引不进行比较
 				continue
 			}
-			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2) ; isMatch {
+			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
 				msg := fmt.Sprintf("检测失败. 检测到重复索引: %v <=> %v.",
 					normalIndexName1, normalIndexName2)
 				this.ReviewMSG.AppendMSG(haveError, msg)

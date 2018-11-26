@@ -1,18 +1,19 @@
 package reviewer
 
 import (
+	"fmt"
+
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
-	"fmt"
 )
 
 type TruncateTableReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.TruncateTableStmt
+	StmtNode     *ast.TruncateTableStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
+	DBConfig     *config.DBConfig
 
 	SchemaName string
 }

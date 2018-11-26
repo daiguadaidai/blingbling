@@ -1,11 +1,12 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
-	"github.com/daiguadaidai/blingbling/config"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/ast"
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/parser"
 )
 
 func TestInsertReviewer_Review(t *testing.T) {
@@ -20,7 +21,7 @@ INSERT INTO t1
 VALUES(1,2,3,4),(1,2,3,4),(1,2,3,4, 5)
 ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
     `
-    fmt.Sprintf(sql)
+	fmt.Sprintf(sql)
 
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(sql, "", "")
@@ -29,7 +30,7 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -88,7 +89,7 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -146,7 +147,7 @@ ON DUPLICATE KEY UPDATE field1 = 10, field2 = 20, field3 = 30
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -196,7 +197,7 @@ func TestInsertReviewer_Review_1(t *testing.T) {
 
     `
 
-    sql = "INSERT INTO `mall_withdraw_limit` (`mall_id`, `last_amount`, `change_amount`, `limit_amount`, `status`, `type`, `operator`, `approver`, `approve_time`, `created_at`, `updated_at`) VALUES (518312393,         100000000,         200000000,         300000000,         2,         0,         'ruoyan',         'ruoyan',         1530773942,         1530773942,         1530773942)"
+	sql = "INSERT INTO `mall_withdraw_limit` (`mall_id`, `last_amount`, `change_amount`, `limit_amount`, `status`, `type`, `operator`, `approver`, `approve_time`, `created_at`, `updated_at`) VALUES (518312393,         100000000,         200000000,         300000000,         2,         0,         'ruoyan',         'ruoyan',         1530773942,         1530773942,         1530773942)"
 	fmt.Sprintf(sql)
 
 	sqlParser := parser.New()
@@ -206,7 +207,7 @@ func TestInsertReviewer_Review_1(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -235,7 +236,7 @@ INSERT INTO emp(emp_no, birth_date, first_name) VALUES(1000001, '2001-01-01', 'H
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)

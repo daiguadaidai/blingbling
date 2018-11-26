@@ -1,44 +1,45 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
-	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dependency/mysql"
 	"fmt"
 	"strings"
-	"github.com/daiguadaidai/blingbling/dao"
+
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/common"
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/dao"
+	"github.com/daiguadaidai/blingbling/dependency/mysql"
 )
 
 type AlterTableReviewer struct {
 	ReViewMSG *ReviewMSG
 
-	StmtNode *ast.AlterTableStmt
-	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
-	AddColumns map[string]bool // 新添加的字段
-	DropColumns map[string]bool // 要删除的字段
-	AddIndexes map[string][]string // 新添加的索引
-	DropIndexes map[string]bool //  要删除的索引
-	AddUniqueIndexes map[string][]string // 新添加的唯一索引
-	IsDropPrimaryKey bool // 要删除的主键
-	PKName string // 主键名称
-	PKColumnNames map[string]bool // 主键字段
-	AfterColumnNames map[string]bool // 有出现在 after 字句中的字段
-	AutoIncrementName string // 自增字段名字
-	AddPartitions map[string]bool // 需要添加的分区
-	DropPartitions map[string]bool // 需要删除的分区
+	StmtNode          *ast.AlterTableStmt
+	ReviewConfig      *config.ReviewConfig
+	DBConfig          *config.DBConfig
+	AddColumns        map[string]bool     // 新添加的字段
+	DropColumns       map[string]bool     // 要删除的字段
+	AddIndexes        map[string][]string // 新添加的索引
+	DropIndexes       map[string]bool     //  要删除的索引
+	AddUniqueIndexes  map[string][]string // 新添加的唯一索引
+	IsDropPrimaryKey  bool                // 要删除的主键
+	PKName            string              // 主键名称
+	PKColumnNames     map[string]bool     // 主键字段
+	AfterColumnNames  map[string]bool     // 有出现在 after 字句中的字段
+	AutoIncrementName string              // 自增字段名字
+	AddPartitions     map[string]bool     // 需要添加的分区
+	DropPartitions    map[string]bool     // 需要删除的分区
 
-	NotAllowColumnTypeMap map[string]bool // 不允许的字段类型
-	NotNullColumnTypeMap map[string]bool // 必须为not null的字段类型
-	NotNullColumnNameMap map[string]bool // 必须为 not null的字段名称
-	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
+	NotAllowColumnTypeMap   map[string]bool // 不允许的字段类型
+	NotNullColumnTypeMap    map[string]bool // 必须为not null的字段类型
+	NotNullColumnNameMap    map[string]bool // 必须为 not null的字段名称
+	ColumnTypeCount         map[byte]int    // 保存字段类型出现的个数
 	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
 
 	OldSchemaName string // 原数据库名
 	NewSchemaName string // 新数据库名
-	OldTableName string  // 原表名
-	NewTableName string  // 新表名
+	OldTableName  string // 原表名
+	NewTableName  string // 新表名
 }
 
 func (this *AlterTableReviewer) Init() {
@@ -170,7 +171,7 @@ func (this *AlterTableReviewer) IncrColumnTypeCount(_column *ast.ColumnDef) {
 Params:
     _spec: 删除字段字句
  */
-func (this *AlterTableReviewer) DetectDropColumn (_spec *ast.AlterTableSpec) (haveError bool) {
+func (this *AlterTableReviewer) DetectDropColumn(_spec *ast.AlterTableSpec) (haveError bool) {
 	// 不允许删除字段
 	if !this.ReviewConfig.RuleAllowDropColumn {
 		haveError = true
@@ -212,7 +213,6 @@ func (this *AlterTableReviewer) DetectModifyColumn(_spec *ast.AlterTableSpec) (h
 		// 对每个字段添加类型个数
 		this.IncrColumnTypeCount(column)
 	}
-
 
 	return
 }
@@ -261,7 +261,7 @@ func (this *AlterTableReviewer) DetectNewColumn(
 	_column *ast.ColumnDef,
 	_spec *ast.AlterTableSpec,
 	_state string,
-) (haveError bool){
+) (haveError bool) {
 	// 添加字段, 并检测字段是否在本次添加中有重复
 	if _, ok := this.AddColumns[_column.Name.String()]; ok {
 		haveError = true
@@ -271,7 +271,6 @@ func (this *AlterTableReviewer) DetectNewColumn(
 		return
 	}
 	this.AddColumns[_column.Name.String()] = true
-
 
 	// 检测字段名字长度
 	var msg string
@@ -292,9 +291,8 @@ func (this *AlterTableReviewer) DetectNewColumn(
 	}
 	this.ReViewMSG.AppendMSG(haveError, msg)
 
-
-	var isNotNull bool = false // 该字段是否为 not null
-	var hasDefaultValue bool = false // 是否有默认值
+	var isNotNull bool = false        // 该字段是否为 not null
+	var hasDefaultValue bool = false  // 是否有默认值
 	var hasColumnComment bool = false // 用于检测字段的注释是否指定
 	// 获取字段是否 not null, 是否有默认值
 	for _, option := range _column.Options {
@@ -353,7 +351,7 @@ func (this *AlterTableReviewer) DetectNewColumn(
 	if this.ReviewConfig.RuleNeedColumnComment { // 字段需要都有注释
 		if !hasColumnComment {
 			haveError = true
-			msg = fmt.Sprintf("检测失败. %v. %v 字段: %v ",  config.MSG_NEED_COLUMN_COMMENT_ERROR,
+			msg = fmt.Sprintf("检测失败. %v. %v 字段: %v ", config.MSG_NEED_COLUMN_COMMENT_ERROR,
 				_state, _column.Name.String())
 			this.ReViewMSG.AppendMSG(haveError, msg)
 			return
@@ -496,7 +494,7 @@ func (this *AlterTableReviewer) DetectRenameTable(_spec *ast.AlterTableSpec) (ha
 
  */
 func (this *AlterTableReviewer) DetectAddConstraint(_spec *ast.AlterTableSpec) (haveError bool) {
-		// 检测索引/约束名是否重复
+	// 检测索引/约束名是否重复
 	if _, ok := this.AddIndexes[_spec.Constraint.Name]; ok {
 		haveError = true
 		msg := fmt.Sprintf("检测失败. alter 语句中有索引/约束名称重复: %v",
@@ -511,7 +509,7 @@ func (this *AlterTableReviewer) DetectAddConstraint(_spec *ast.AlterTableSpec) (
 	for _, indexName := range _spec.Constraint.Keys {
 		// 检测 索引/约束 中有重复字段
 		if _, ok := indexColumnNameMap[indexName.Column.String()]; ok { // 警告
-			msg := fmt.Sprintf("检测失败. alter 语句中 同一个 索引/约束 中有同一个重复字段. " +
+			msg := fmt.Sprintf("检测失败. alter 语句中 同一个 索引/约束 中有同一个重复字段. "+
 				"索引/约束: %v, 重复的字段名: %v",
 				_spec.Constraint.Name, indexName.Column.String())
 			this.ReViewMSG.AppendMSG(haveError, msg)
@@ -868,7 +866,7 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 	// 获取原表的建表语句
 	err = tableInfo.InitCreateTableSql(this.OldSchemaName, this.OldTableName)
 	if err != nil {
-		msg = fmt.Sprintf("警告: 该alter sql语法正确. " +
+		msg = fmt.Sprintf("警告: 该alter sql语法正确. "+
 			"但是无法获取到源表建表sql. %v", err)
 		haveMSG = this.ReViewMSG.AppendMSG(false, msg)
 		tableInfo.CloseInstance()
@@ -879,13 +877,12 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 	// 对源表键表语句进行解析, 得到字段, 约束, 分区 等信息
 	err = tableInfo.ParseCreateTableInfo()
 	if err != nil {
-		msg = fmt.Sprintf("警告: 该alter sql语法正确. " +
+		msg = fmt.Sprintf("警告: 该alter sql语法正确. "+
 			"但解析源表信息失败, 以至于无法检测相关信息. %v", err)
 		haveMSG = this.ReViewMSG.AppendMSG(false, msg)
 		tableInfo.CloseInstance()
 		return
 	}
-
 
 	// 检测索引个数是否超过指定
 	haveError = this.DetectIndexCount(tableInfo)
@@ -1026,7 +1023,7 @@ func (this *AlterTableReviewer) DetectTextColumnTypeCount(_tableInfo *dao.TableI
 		oriTextCount = 0
 	}
 
-	if addTextCount + oriTextCount > this.ReviewConfig.RuleTextTypeColumnCount {
+	if addTextCount+oriTextCount > this.ReviewConfig.RuleTextTypeColumnCount {
 		msg := fmt.Sprintf("检测失败. 表: %v. %v.",
 			this.StmtNode.Table.Name.String(),
 			fmt.Sprintf(config.MSG_TEXT_TYPE_COLUMN_COUNT_ERROR, this.ReviewConfig.RuleTextTypeColumnCount))
@@ -1064,7 +1061,6 @@ func (this *AlterTableReviewer) DetectInstancePartition(_tableInfo *dao.TableInf
 
 	return
 }
-
 
 /* 检测必须包含的字段名
 Params:
@@ -1142,7 +1138,7 @@ func (this *AlterTableReviewer) DetectAllIndexHaveUniqueIndex(_tableInfo *dao.Ta
 			if normalIndexName == uniqueIndexName { // 同一个索引不进行比较
 				continue
 			}
-			if isMatch := common.StrIsMatch(hashNormalIndexStr, hashUniqueIndexStr) ; isMatch {
+			if isMatch := common.StrIsMatch(hashNormalIndexStr, hashUniqueIndexStr); isMatch {
 				msg := fmt.Sprintf("检测失败. 普通索引: %v, 包含了唯一索引: %v 的字段.",
 					normalIndexName, uniqueIndexName)
 				this.ReViewMSG.AppendMSG(haveError, msg)
@@ -1169,7 +1165,7 @@ func (this *AlterTableReviewer) DetectDuplecateIndex(_tableInfo *dao.TableInfo) 
 			if normalIndexName1 == normalIndexName2 { // 同一个索引不进行比较
 				continue
 			}
-			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2) ; isMatch {
+			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
 				msg := fmt.Sprintf("检测失败. 检测到重复索引: %v <=> %v.",
 					normalIndexName1, normalIndexName2)
 				this.ReViewMSG.AppendMSG(haveError, msg)
@@ -1220,7 +1216,7 @@ func (this *AlterTableReviewer) DetectIndexCount(_tableInfo *dao.TableInfo) (hav
 		addIndexCount ++
 	}
 
-	if addIndexCount + len(_tableInfo.Indexes) > this.ReviewConfig.RuleIndexCount {
+	if addIndexCount+len(_tableInfo.Indexes) > this.ReviewConfig.RuleIndexCount {
 		haveError = true
 		msg := fmt.Sprintf("检测失败. %v",
 			fmt.Sprintf(config.MSG_INDEX_COUNT_ERROR, this.ReviewConfig.RuleIndexCount))
@@ -1249,4 +1245,3 @@ func (this *AlterTableReviewer) DetectAfterColumnExists(_tableInfo *dao.TableInf
 
 	return
 }
-

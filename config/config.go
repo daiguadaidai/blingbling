@@ -1,8 +1,8 @@
 package config
 
 import (
-	"strings"
 	"github.com/daiguadaidai/blingbling/common"
+	"strings"
 )
 
 var reviewConfig *ReviewConfig
@@ -267,4 +267,3 @@ func (this *ReviewConfig) GetHaveColumnNameMap() map[string]bool {
 func (this *ReviewConfig) GetNeedDefaultValueNameMap() map[string]bool {
 	return common.SplitString2Map(this.RuleNeedDefaultValueName, ",")
 }
-

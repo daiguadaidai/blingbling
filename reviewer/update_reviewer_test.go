@@ -1,10 +1,11 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
+	"testing"
+
 	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/parser"
 )
 
 func TestUpdateReviewer_Review(t *testing.T) {
@@ -26,7 +27,7 @@ WHERE a1.pt_day = '2017-09-20'
     AND a1.uid = a2.uid
     AND a1.aid = (select id from t2 where id = 3);
     `
-    fmt.Sprintf(sql)
+	fmt.Sprintf(sql)
 
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(sql, "", "")
@@ -35,7 +36,7 @@ WHERE a1.pt_day = '2017-09-20'
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	reviewConfig.RuleAllowUpdateHasJoin = true
 	reviewConfig.RuleAllowUpdateHasSubClause = true
@@ -77,7 +78,7 @@ WHERE a1.pt_day = '2017-09-20'
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -114,7 +115,7 @@ WHERE a1.pt_day = '2017-09-20'
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -150,7 +151,7 @@ WHERE a1.pt_day = '2017-09-20'
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -182,7 +183,7 @@ SET a1.user_currday_score = a1.user_currday_increment_score + a2.user_currday_sc
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -216,7 +217,7 @@ LIMIT 1
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -247,7 +248,7 @@ UpdaTe employees sEt birth_date = '2018-01-01' where emp_no = 10001
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -284,7 +285,7 @@ WHERE id IN (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -317,7 +318,7 @@ WHERE id between 1 and 10;
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)

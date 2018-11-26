@@ -1,15 +1,16 @@
 package reviewer
 
 import (
+	"crypto/md5"
 	"fmt"
 	"regexp"
-	"github.com/daiguadaidai/blingbling/config"
 	"strings"
-	"github.com/dlclark/regexp2"
-	"crypto/md5"
-	"github.com/daiguadaidai/blingbling/dao"
-	"github.com/juju/errors"
+
 	"github.com/daiguadaidai/blingbling/common"
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/dao"
+	"github.com/dlclark/regexp2"
+	"github.com/juju/errors"
 )
 
 /* 检测名称长度是否合法
@@ -132,7 +133,7 @@ Params:
     _indexes: 所有的索引
 	_uniqueIndex: 所有的普通索引
  */
-func GetNoUniqueIndexes(_indexes map[string][]string, _uniqueIndex map[string][]string) map[string][]string{
+func GetNoUniqueIndexes(_indexes map[string][]string, _uniqueIndex map[string][]string) map[string][]string {
 	normalIndexes := make(map[string][]string)
 
 	for indexName, index := range _indexes {
@@ -202,13 +203,13 @@ Params:
     _names: 需要转化的索引
  */
 func GetHashNames(_names []string) []string {
-		hashIndex := make([]string, 0, 1)
-		for _, columnName := range _names {
-			data := []byte(columnName)
-			has := md5.Sum(data)
-			hashColumn := fmt.Sprintf("%x", has)
-			hashIndex = append(hashIndex, hashColumn)
-		}
+	hashIndex := make([]string, 0, 1)
+	for _, columnName := range _names {
+		data := []byte(columnName)
+		has := md5.Sum(data)
+		hashColumn := fmt.Sprintf("%x", has)
+		hashIndex = append(hashIndex, hashColumn)
+	}
 
 	return hashIndex
 }
@@ -248,13 +249,12 @@ func DetectDatabaseNotExistsByName(_tableInfo *dao.TableInfo, _dbName string) (h
 	}
 	if !exists {
 		haveError = true
-		msg := fmt.Sprintf("检测失败: 目标数据库 %v 不存在.",_dbName)
+		msg := fmt.Sprintf("检测失败: 目标数据库 %v 不存在.", _dbName)
 		return haveError, msg
 	}
 
 	return
 }
-
 
 /* 表否存在返回错误
 Params:
@@ -343,8 +343,8 @@ func GetExplainSelectSqlByUpdateSql(
 	if _hasWhereClause {
 		// 生成 explain select where 子句
 		whereReg := regexp.MustCompile(`(?i)\sWHERE\s`)
-		whereItems := whereReg.Split(setSplitItems[1], _setWhereCount + 2)
-		explainSelectWhere = whereItems[len(whereItems) - 1]
+		whereItems := whereReg.Split(setSplitItems[1], _setWhereCount+2)
+		explainSelectWhere = whereItems[len(whereItems)-1]
 	}
 
 	explainSelectSql = fmt.Sprintf("%v where %v", explainSelectSuffix, explainSelectWhere)
