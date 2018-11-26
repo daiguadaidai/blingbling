@@ -1,12 +1,12 @@
 package reviewserver
 
 import (
-	"sync"
-	"net/http"
-	"github.com/daiguadaidai/blingbling/reviewserver/handle"
+	"fmt"
 	log "github.com/cihub/seelog"
 	"github.com/daiguadaidai/blingbling/config"
-	"fmt"
+	"github.com/daiguadaidai/blingbling/reviewserver/handle"
+	"net/http"
+	"sync"
 )
 
 /* 启动Http服务
@@ -18,7 +18,7 @@ func StartReviewServer(_httpServerConfig *config.HttpServerConfig, _wg *sync.Wai
 	defer _wg.Done()
 
 	// 添加路由
-	http.HandleFunc("/sqlReview", handle.SqlReviewHandle) // 审核
+	http.HandleFunc("/sqlReview", handle.SqlReviewHandle)       // 审核
 	http.HandleFunc("/ClientParams", handle.ClientParamsHandle) // 客户端帮助参数
 
 	log.Infof("监听地址为: %v", _httpServerConfig.Address())

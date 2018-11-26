@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/daiguadaidai/blingbling/config"
-	"sync"
-	"github.com/daiguadaidai/blingbling/reviewserver"
 	log "github.com/cihub/seelog"
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/reviewserver"
+	"sync"
 )
 
 func Run(_httpServerConfig *config.HttpServerConfig, _config *config.ReviewConfig) {
@@ -21,5 +21,3 @@ func Run(_httpServerConfig *config.HttpServerConfig, _config *config.ReviewConfi
 
 	wg.Wait()
 }
-
-

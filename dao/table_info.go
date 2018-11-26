@@ -2,33 +2,33 @@ package dao
 
 import (
 	"fmt"
-	"github.com/juju/errors"
-	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/parser"
 	"github.com/daiguadaidai/blingbling/ast"
+	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
+	"github.com/daiguadaidai/blingbling/parser"
+	"github.com/juju/errors"
 	"strconv"
 )
 
 type TableInfo struct {
-	DBName string
+	DBName    string
 	TableName string
-	Instance *Instance
+	Instance  *Instance
 
-	Exists bool
-	ExistsQueried bool // 已经查询过了 表是否存在
-	DBExists bool
+	Exists          bool
+	ExistsQueried   bool // 已经查询过了 表是否存在
+	DBExists        bool
 	DBExistsQueried bool // 已经查询过了 数据库是否存在
 
-	CreateTableSql string
-	ColumnNameMap map[string]bool
-	PKColumnNameMap map[string]bool
+	CreateTableSql   string
+	ColumnNameMap    map[string]bool
+	PKColumnNameMap  map[string]bool
 	PKColumnNameList []string
-	UniqueIndexes map[string][]string
-	Indexes map[string][]string
-	FullTextIndex map[string][]string
-	PartitionNames map[string]bool
-	ColumnTypeCount map[byte]int // 保存字段类型出现的个数
+	UniqueIndexes    map[string][]string
+	Indexes          map[string][]string
+	FullTextIndex    map[string][]string
+	PartitionNames   map[string]bool
+	ColumnTypeCount  map[byte]int // 保存字段类型出现的个数
 }
 
 /* 新建一个表信息
@@ -38,9 +38,9 @@ Params:
  */
 func NewTableInfo(_dbConfig *config.DBConfig, _table string) *TableInfo {
 	return &TableInfo{
-		DBName: _dbConfig.Database,
+		DBName:    _dbConfig.Database,
 		TableName: _table,
-		Instance: NewInstance(_dbConfig),
+		Instance:  NewInstance(_dbConfig),
 	}
 }
 
@@ -121,8 +121,8 @@ func (this *TableInfo) FindColumnNameMap() (map[string]bool, error) {
         AND TABLE_NAME = ?;
     `
 
-    rows, err := this.Instance.DB.Query(sql, this.DBName, this.TableName)
-    if err != nil {
+	rows, err := this.Instance.DB.Query(sql, this.DBName, this.TableName)
+	if err != nil {
 		errMSG := fmt.Sprintf("获取表所有列出错: %v.%v %v:%v. %v",
 			this.DBName, this.TableName, this.Instance.DBconfig.Host, this.Instance.DBconfig.Port,
 			err)
@@ -213,7 +213,6 @@ func (this *TableInfo) FindPrimaryKey() ([]string, map[string]bool, error) {
 	}
 	defer rows.Close()
 
-
 	pkColumnNameMap := make(map[string]bool)
 	pkColumnNameList := make([]string, 0, 1)
 	var pkColumnName string
@@ -267,7 +266,6 @@ func (this *TableInfo) FindUniqueIndexes() (map[string][]string, error) {
 	}
 	defer rows.Close()
 
-
 	uniqueIndexes := make(map[string][]string)
 	var uniqueName string
 	var uniqueColumnName string
@@ -309,14 +307,13 @@ func (this *TableInfo) FindNormalIndexes() (map[string][]string, error) {
 	}
 	defer rows.Close()
 
-
 	indexes := make(map[string]map[int]string)
 	var ignore interface{}
 	var indexName string
 	var seqInIndex int
 	var indexColumnName string
 	for rows.Next() {
-		rows.Scan(&ignore, &ignore, &indexName, &seqInIndex, &indexColumnName,&ignore,
+		rows.Scan(&ignore, &ignore, &indexName, &seqInIndex, &indexColumnName, &ignore,
 			&ignore, &ignore, &ignore, &ignore, &ignore, &ignore, &ignore)
 		if _, ok := indexes[indexName]; !ok {
 			indexes[indexName] = make(map[int]string)
@@ -341,7 +338,7 @@ func (this *TableInfo) FindNormalIndexes() (map[string][]string, error) {
 		}
 
 		for seqInIndex, columnName := range indexColumnNameMap {
-			this.Indexes[indexName][seqInIndex - 1] = columnName
+			this.Indexes[indexName][seqInIndex-1] = columnName
 		}
 	}
 
@@ -391,7 +388,7 @@ func (this *TableInfo) InitCreateTableSql(_dbName, _tableName string) error {
 	if err != nil {
 		errMSG := fmt.Sprintf("show create table `%v`.`%v` 失败. %v",
 			_dbName, _tableName, err)
-		return  errors.New(errMSG)
+		return errors.New(errMSG)
 	}
 
 	return nil
@@ -404,7 +401,7 @@ func (this *TableInfo) GetExplainMaxRows(_sql string) (int, error) {
 	rows, err := this.Instance.DB.Query(_sql)
 	if err != nil {
 		errMSG := fmt.Sprintf("执行explain失败: %v:%v. %v %v",
-		this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
+			this.Instance.DBconfig.Host, this.Instance.DBconfig.Port, _sql, err)
 		return -1, errors.New(errMSG)
 	}
 	defer rows.Close()

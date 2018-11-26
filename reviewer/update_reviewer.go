@@ -1,8 +1,8 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 )
@@ -10,10 +10,10 @@ import (
 type UpdateReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.UpdateStmt
+	StmtNode     *ast.UpdateStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
-	visitor *UpdateVisitor
+	DBConfig     *config.DBConfig
+	visitor      *UpdateVisitor
 }
 
 func (this *UpdateReviewer) Init() {

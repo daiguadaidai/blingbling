@@ -1,8 +1,8 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 )
@@ -10,9 +10,9 @@ import (
 type CreateDatabaseReviewer struct {
 	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.CreateDatabaseStmt
+	StmtNode     *ast.CreateDatabaseStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
+	DBConfig     *config.DBConfig
 }
 
 func (this *CreateDatabaseReviewer) Init() {

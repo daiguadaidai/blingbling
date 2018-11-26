@@ -3,9 +3,9 @@ package reviewer
 import "fmt"
 
 type ReviewTable struct {
-	SchemaName string
-	TableName string
-	Alias string
+	SchemaName      string
+	TableName       string
+	Alias           string
 	WhereColumnName map[string]bool
 }
 

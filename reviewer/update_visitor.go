@@ -1,24 +1,24 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/ast"
 )
 
-type UpdateVisitor struct{
-	IsMultiTable bool
-	RefTables map[string]*ReviewTable
-	WhereSubClauseTables map[string]*ReviewTable
-	StmtBlockType int
-	HasWhereClause bool
-	SubClauseLevel int
-	HasSubClause bool
-	HasLimitClause bool
-	IsInSetClause bool // 当前便利是否在set子句中
-	SetSubClauseCount int // set子句的个数
-	SetSubClauseWhereCount int // set子句中的where有几个
+type UpdateVisitor struct {
+	IsMultiTable                    bool
+	RefTables                       map[string]*ReviewTable
+	WhereSubClauseTables            map[string]*ReviewTable
+	StmtBlockType                   int
+	HasWhereClause                  bool
+	SubClauseLevel                  int
+	HasSubClause                    bool
+	HasLimitClause                  bool
+	IsInSetClause                   bool         // 当前便利是否在set子句中
+	SetSubClauseCount               int          // set子句的个数
+	SetSubClauseWhereCount          int          // set子句中的where有几个
 	SetSubClauseLevelMeetFirstWhere map[int]bool // set字句中子句层级是否有碰到了第一个where
-	TableNameAlias string
+	TableNameAlias                  string
 }
 
 func NewUpdateVisitor() *UpdateVisitor {
@@ -28,7 +28,7 @@ func NewUpdateVisitor() *UpdateVisitor {
 	updateVisitor.WhereSubClauseTables = make(map[string]*ReviewTable)
 	updateVisitor.SetSubClauseLevelMeetFirstWhere = make(map[int]bool)
 
-	return  updateVisitor
+	return updateVisitor
 }
 
 func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
@@ -76,7 +76,7 @@ func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 			reviewTable := &ReviewTable{
 				SchemaName: stmt.Schema.String(),
 				TableName:  stmt.Name.String(),
-				Alias: this.TableNameAlias,
+				Alias:      this.TableNameAlias,
 			}
 			if this.StmtBlockType == TABLE_REFS_CLAUSE {
 				if _, ok := this.RefTables[reviewTable.ToString()]; ok {
@@ -115,7 +115,7 @@ func (this *UpdateVisitor) Leave(in ast.Node) (out ast.Node, ok bool) {
 	case *ast.Assignment:
 		this.IsInSetClause = false
 		this.SetSubClauseLevelMeetFirstWhere = make(map[int]bool) // 重新开始计算每个set中的where
-		this.SetSubClauseCount = 0 // 重新计算set中子句个数
+		this.SetSubClauseCount = 0                                // 重新计算set中子句个数
 	case *ast.TableSource:
 		this.TableNameAlias = ""
 	}

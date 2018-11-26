@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/service"
+	"github.com/spf13/cobra"
 )
 
 var runConfig *config.ReviewConfig
@@ -65,23 +65,22 @@ func init() {
 	httpServerConfig = new(config.HttpServerConfig)
 
 	// 启动服务器的host
-	rootCmd.Flags().StringVar(&httpServerConfig.Host,"listen-host",
+	rootCmd.Flags().StringVar(&httpServerConfig.Host, "listen-host",
 		config.HTTP_SERVER_LISTEN_HOST, "通用名称匹配规则")
 	rootCmd.Flags().IntVar(&httpServerConfig.Port, "listen-port",
-		config.HTTP_SERVER_LISTEN_PORT,"启动服务使用的端口")
+		config.HTTP_SERVER_LISTEN_PORT, "启动服务使用的端口")
 
-
-	/////////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////
 	// sql review 规则
-	/////////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////
 	rootCmd.Flags().IntVar(&runConfig.RuleNameLength, "rule-name-length",
-		config.RULE_NAME_LENGTH,"通用名称长度")
+		config.RULE_NAME_LENGTH, "通用名称长度")
 	rootCmd.Flags().StringVar(&runConfig.RuleNameReg, "rule-name-reg",
 		config.RULE_NAME_REG, "通用名称匹配规则")
 	rootCmd.Flags().StringVar(&runConfig.RuleCharSet, "rule-charset",
-		config.RULE_CHARSET,"通用允许的字符集, 默认(多个用逗号隔开)")
+		config.RULE_CHARSET, "通用允许的字符集, 默认(多个用逗号隔开)")
 	rootCmd.Flags().StringVar(&runConfig.RuleCollate, "rule-collate",
-		config.RULE_COLLATE,"通用允许的collate, 默认(多个用逗号隔开)")
+		config.RULE_COLLATE, "通用允许的collate, 默认(多个用逗号隔开)")
 	rootCmd.Flags().BoolVar(&runConfig.RuleAllowDropDatabase, "rule-allow-drop-database",
 		config.RULE_ALLOW_DROP_DATABASE,
 		fmt.Sprintf("是否允许删除数据库, 默认: %v", config.RULE_ALLOW_DROP_DATABASE))
@@ -98,10 +97,10 @@ func init() {
 		config.RULE_TABLE_ENGINE, "允许的存储引擎 默认(多个用逗号隔开)")
 	rootCmd.Flags().StringVar(&runConfig.RuleNotAllowColumnType, "rule-not-allow-column-type",
 		config.RULE_NOT_ALLOW_COLUMN_TYPE,
-		"不允许的字段类型, 至此的类型: " +
-		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +
-		"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, " +
-		"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
+		"不允许的字段类型, 至此的类型: "+
+			"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, "+
+			"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, "+
+			"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
 	rootCmd.Flags().BoolVar(&runConfig.RuleNeedTableComment, "rule-need-table-comment",
 		config.RULE_NEED_TABLE_COMMENT,
 		fmt.Sprintf("表是否需要注释 默认: %v", config.RULE_NEED_TABLE_COMMENT))
@@ -133,15 +132,15 @@ func init() {
 		fmt.Sprintf("是否允许使用全文索引. 默认: %v", config.RULE_ALLOW_FULL_TEXT))
 	rootCmd.Flags().StringVar(&runConfig.RuleNotNullColumnType, "rule-not-null-column-type",
 		config.RULE_NOT_NULL_COLUMN_TYPE,
-		"必须为not null的字段类型, 默认(多个用逗号隔开). 可填写的类型有: " +
-		"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, " +
-		"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, " +
-		"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
+		"必须为not null的字段类型, 默认(多个用逗号隔开). 可填写的类型有: "+
+			"decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, "+
+			"datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, "+
+			"longblob, blob, tinytext, mediumtext, longtext, text, geometry")
 	rootCmd.Flags().StringVar(&runConfig.RuleNotNullColumnName, "rule-not-null-column-name",
 		config.RULE_NOT_NULL_COLUMN_NAME, "必须为not null 的索引名, 默认(多个用逗号隔开)")
 	rootCmd.Flags().IntVar(&runConfig.RuleTextTypeColumnCount, "rule-text-type-column-count",
-		config.RULE_TEXT_TYPE_COLUMN_COUNT, "允许使用text/blob字段个数. 如果在rule-not-allow-column-type相关text字段." +
-		"该参数将不其作用")
+		config.RULE_TEXT_TYPE_COLUMN_COUNT, "允许使用text/blob字段个数. 如果在rule-not-allow-column-type相关text字段."+
+			"该参数将不其作用")
 	rootCmd.Flags().StringVar(&runConfig.RuleNeedIndexColumnName, "rule-need-index-column-name",
 		config.RULE_NEED_INDEX_COLUMN_NAME, "必须要有索引的字段名, 默认(多个用逗号隔开)")
 	rootCmd.Flags().StringVar(&runConfig.RuleHaveColumnName, "rule-have-column-name",

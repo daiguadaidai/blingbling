@@ -1,11 +1,11 @@
 package reviewer
 
 import (
-	"testing"
 	"fmt"
-	"github.com/daiguadaidai/blingbling/parser"
-	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/ast"
+	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/parser"
+	"testing"
 )
 
 func TestAlterTableReviewer_Review(t *testing.T) {
@@ -44,7 +44,7 @@ ALTER TABLE test.t3
     ADD COLUMN text07 text comment '1',
     engine=innodb;
     `
-    fmt.Sprintf("%v", sql)
+	fmt.Sprintf("%v", sql)
 
 	sql1 := `
 ALTER TABLE test.t3
@@ -62,7 +62,7 @@ add (
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	reviewMSGs := make([]*ReviewMSG, 0, 1)
 	for _, stmtNode := range stmtNodes {
@@ -184,7 +184,7 @@ add (
 				fmt.Printf("--- %v: AlterTableChangeColumn ---: name: %v, comment: %v\n",
 					i, spec.Name, spec.Comment)
 				fmt.Println(spec.NewColumns, spec.OldColumnName)
-				for _, column := range spec.NewColumns{
+				for _, column := range spec.NewColumns {
 					fmt.Println("    ----:", column.Name.String())
 					// for
 				}
@@ -242,7 +242,7 @@ alter table employees add column age1 int not null default 0 comment 'aaaa'
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -273,7 +273,7 @@ ALTER TABLE emp
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -299,7 +299,7 @@ func TestAlterTableReviewer_Review_1(t *testing.T) {
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
@@ -336,7 +336,7 @@ alter table app_oms_prom_goods_flow_4h_hr_partition
 	}
 
 	// 循环每一个sql语句进行解析, 并且生成相关审核信息
-	dbConfig := config.NewDBConfig(host, port, username ,password, database)
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
 	reviewConfig := config.NewReviewConfig()
 	for _, stmtNode := range stmtNodes {
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)

@@ -4,17 +4,17 @@ import (
 	"github.com/daiguadaidai/blingbling/ast"
 )
 
-type DeleteVisitor struct{
-	IsMultiTable bool
-	RefTables map[string]*ReviewTable
-	DeleteTables map[string]*ReviewTable
+type DeleteVisitor struct {
+	IsMultiTable         bool
+	RefTables            map[string]*ReviewTable
+	DeleteTables         map[string]*ReviewTable
 	WhereSubClauseTables map[string]*ReviewTable
-	StmtBlockType int
-	HasWhereClause bool
-	SubClauseLevel int
-	HasSubClause bool
-	HasLimitClause bool
-	TableNameAlias string
+	StmtBlockType        int
+	HasWhereClause       bool
+	SubClauseLevel       int
+	HasSubClause         bool
+	HasLimitClause       bool
+	TableNameAlias       string
 }
 
 func NewDeleteVisitor() *DeleteVisitor {
@@ -24,7 +24,7 @@ func NewDeleteVisitor() *DeleteVisitor {
 	deleteVisitor.DeleteTables = make(map[string]*ReviewTable)
 	deleteVisitor.WhereSubClauseTables = make(map[string]*ReviewTable)
 
-	return  deleteVisitor
+	return deleteVisitor
 }
 
 func (this *DeleteVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
@@ -72,7 +72,7 @@ func (this *DeleteVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 			reviewTable := &ReviewTable{
 				SchemaName: stmt.Schema.String(),
 				TableName:  stmt.Name.String(),
-				Alias: this.TableNameAlias,
+				Alias:      this.TableNameAlias,
 			}
 			if this.StmtBlockType == TABLE_REFS_CLAUSE {
 				if _, ok := this.RefTables[reviewTable.ToString()]; ok {

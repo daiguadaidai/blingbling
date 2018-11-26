@@ -1,19 +1,19 @@
 package reviewer
 
 import (
-	"github.com/daiguadaidai/blingbling/ast"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type DeleteReviewer struct {
-	ReviewMSG * ReviewMSG
+	ReviewMSG *ReviewMSG
 
-	StmtNode *ast.DeleteStmt
+	StmtNode     *ast.DeleteStmt
 	ReviewConfig *config.ReviewConfig
-	DBConfig *config.DBConfig
-	Visitor *DeleteVisitor
+	DBConfig     *config.DBConfig
+	Visitor      *DeleteVisitor
 }
 
 func (this *DeleteReviewer) Init() {

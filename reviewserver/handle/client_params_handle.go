@@ -1,8 +1,8 @@
 package handle
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 func ClientParamsHandle(w http.ResponseWriter, r *http.Request) {
@@ -11,4 +11,3 @@ func ClientParamsHandle(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, requestReviewParam.ClientParams())
 	return
 }
-
