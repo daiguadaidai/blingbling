@@ -987,24 +987,168 @@ print(r.text)
 
     - **md:** MetaData 元数据信息
 
-        - **schema:** 数据库
+4. **建表的元数据**
 
-        - **table:** 表
+    - **schema:** 数据库
 
-        - **if_not_exists:** `true/false` 是否有 `if not exists` 子句
+    - **table:** 表
 
-        - **engine:** 存储引擎
+    - **if_not_exists:** `true/false` 是否有 `if not exists` 子句
 
-        - **charset:** 字符集
+    - **engine:** 存储引擎
 
-        - **collate:** 排序
+    - **charset:** 字符集
 
-        - **comment:** 注释
+    - **collate:** 排序
 
-        - **auto_increment:** `AUTO_INTREMENT` 值
+    - **comment:** 注释
 
+    - **auto_increment:** `AUTO_INTREMENT` 值
 
+    - **columns:** 字段信息, 是一个数组
 
+        - **name:** 字段名
+
+        - **type:** 字段类型
+
+        - **default:** 字段默认值
+
+        - **comment:** 字段注释
+
+        - **not_null:** `true/false`是否为 `NOT NULL`
+
+        - **auto_increment:** `true/false`是否为 `AUTO_INCREMENT`
+
+    - **constraints:** 约束信息. 是一个数组
+        
+        - **type:** 约束类型 `pk/uk/idx/fk/ft`. `pk`:主键. `uk`:唯一键. `idx`:普通索引. `fk`:外键. `ft`:全文索引
+
+        - **name:** 约束名称
+        
+        - **column_names:** 约束字段名
+
+5. **ALTER TABLE元数据**
+    
+    - **schema:** 数据库
+    
+    - **table:** 表
+
+    - **ops:** 是一个数组保存了各种alter 元数据
+
+    - **添加列:**
+
+        - **type:** "add_column"
+        
+        - **after:** after值
+        
+        - **columns:** 字段信息, 是一个数组
+        
+            - **name:** 字段名
+        
+            - **type:** 字段类型
+        
+            - **default:** 字段默认值
+        
+            - **comment:** 字段注释
+        
+            - **not_null:** `true/false`是否为 `NOT NULL`
+        
+            - **auto_increment:** `true/false`是否为 `AUTO_INCREMENT`
+
+    - **删除列:**
+
+        - **Type:** "drop_column",
+
+        - **column_name:** 删除的 column的名称
+
+    - **添加约束:**
+
+        - **type": "add_constraint",
+        
+        - **constraint": 约束
+        
+            - **name:** 约束名称
+        
+            - **column_names:** 字段名称, 是一个数组
+        
+            - **type:** 约束类型 `pk/idx/fk`
+
+    - **删除约束:**
+
+        - **type:** "drop_constraint",
+
+        - **constraint_type:** 约束类型 `pk/idx/fk`
+
+        - **name**: 删除的约束名称
+
+    - **modify列:**
+
+        - **type:** "modify_column"
+        
+        - **after:** after值
+        
+        - **columns:** 字段信息, 是一个数组
+        
+            - **name:** 字段名
+        
+            - **type:** 字段类型
+        
+            - **default:** 字段默认值
+        
+            - **comment:** 字段注释
+        
+            - **not_null:** `true/false`是否为 `NOT NULL`
+        
+            - **auto_increment:** `true/false`是否为 `AUTO_INCREMENT`
+
+    - **change列:**
+
+        - **type:** "change_column"
+        
+        - **after:** after值
+
+        - **old_name:** 旧字段名
+
+        - **new_column:** 字段信息
+        
+            - **name:** 新字段名
+        
+            - **type:** 字段类型
+        
+            - **default:** 字段默认值
+        
+            - **comment:** 字段注释
+        
+            - **not_null:** `true/false`是否为 `NOT NULL`
+        
+            - **auto_increment:** `true/false`是否为 `AUTO_INCREMENT`
+
+    - **修改表名:**
+
+        - **type:** "rename_table",
+
+        - **schema:** 新数据库名
+
+        - **table:** 新表名
+
+    - **修改索引名:**
+
+        - **type:** "rename_index",
+        
+        - **old_name:** 老索引名
+        
+        - **new_name:** 新索引名
+
+    - **修改表级别的选项:**
+
+        - **type:** "options",
+
+        - **options:** 表的选项, 是一个数组
+
+        - **type**: `engine/comment/charset/collate/auto_increment`,
+
+        - **value:** 上面`type`对应的值
+        
 ## supervisor管理进程
 
 `supervisor`可以很好的管理你的进程. 自己就不必再写一个相关守护进程的东西了. 为他点给赞.
@@ -1038,7 +1182,7 @@ supervisorctl status
 ```
 
 ### 主要的配置
-
+    
 下面列出了主要的一些配置, 配置的注释使用分号开头(`;`).
 
 大家需要注意看的主要是`[program:blingbling]`这个模块的东西, 该模块主要是指定了管理程序的名称是什么, 这边我们写的程序名称是`blingbling`.
