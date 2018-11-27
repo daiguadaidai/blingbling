@@ -1063,9 +1063,9 @@ print(r.text)
 
     - **添加约束:**
 
-        - **type": "add_constraint",
+        - **type**: "add_constraint",
         
-        - **constraint": 约束
+        - **constraint**: 约束
         
             - **name:** 约束名称
         
