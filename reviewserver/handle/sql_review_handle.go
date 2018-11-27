@@ -48,7 +48,7 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 /* 通过http请求的内容获取相关自定义审核参数
 Params:
 	_request: 请求
- */
+*/
 func GetRequestReviewParam(_request *http.Request) (*RequestReviewParam, error) {
 	switch _request.Method {
 	case "POST":
@@ -103,8 +103,8 @@ Params:
 Return:
 	int: 审核状态码
 	string: 审核相关信息, 如果成功是成功信息, 如果失败是失败信息
- */
-func StartReview(_requestParam *RequestReviewParam) ([]*reviewer.ReviewMSG) {
+*/
+func StartReview(_requestParam *RequestReviewParam) []*reviewer.ReviewMSG {
 	reviewConfig := _requestParam.GetReviewConfig() // 获取审核参数
 	dbConfig := _requestParam.GetDBConfig()         // 链接数据库配置
 

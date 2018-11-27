@@ -18,6 +18,8 @@ MySQL SQL 解析审核工具
     - [VUE-RESOURCE客户端](#VUE-RESOURCE客户端)
     - [axios客户端](#axios客户端)
 - [高级玩法](#高级玩法)
+- [获取元数据](#获取元数据)
+    - [Python获取元数据](#Python获取元数据)
 - [supervisor管理进程](#supervisor管理进程)
     - [基本使用方法](#基本使用方法)
     - [主要的配置](主要的配置)
@@ -737,6 +739,271 @@ print(r.text)
 
 > **注意:**上面`CustomRuleNameReg`, `RuleNameReg`这两个参数--必须--是同时出现的.
 > 千万别只出现了`CustomRuleNameReg=True`而`RuleNameReg`不设置值. 这样的后果是会使用`Golang`的字符串的默认值. 审核的时候将会遇到奇葩结果.
+
+## 获取元数据
+
+**接口:** `http://10.10.10.55:19527/meta`
+
+可以通过该接口获取到sql的相关原数据.
+
+我们这边只演示`Python`的方法来访问该接口
+
+### Python获取元数据
+
+```
+#!/usr/bin/evn python3
+#-*- coding:utf-8 -*-
+
+import requests
+
+sqls = '''
+CREATE TABLE test.t1 (
+  id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  PRIMARY KEY (id),
+  UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
+  Index idx_uptime (uptime),
+) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
+
+ALTER TABLE test.t1
+  Add COLUMN arr varchar(3) NOT NULL DEFAULT '' Comment '注释',
+  DROP COLUMN name,
+  ADD PRIMARY KEY (id, name),
+  ADD INDEX idx_id_name(id, name),
+  ADD UNIQUE INDEX idx_id_name(id, name),
+  DROP PRIMARY KEY,
+  DROP INDEX idx_id_name,
+  MODIFY arr varchar(3) NOT NULL DEFAULT '' Comment '注释',
+  CHANGE id id1 bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  CHARSET='utf8mb4' ENGINE=innodb COMMENT="表注释",
+  RENAME TO test2.t2,
+  RENAME INDEX idx1 to idx2;
+'''
+
+data = {
+    'sqls': sqls,
+}
+
+url = 'http://10.10.10.55:19527/meta'
+
+r = requests.post(url, json = data)
+
+print(r.text)
+```
+
+输出
+
+```
+{
+    "Status": true,
+    "Message": "",
+    "Data": [
+        {
+            "type": "ct",
+            "md": {
+                "schema": "test",
+                "table": "t1",
+                "columns": [
+                    {
+                        "name": "id",
+                        "type": "bigint(18)",
+                        "default": "",
+                        "comment": "主键",
+                        "not_null": true,
+                        "auto_increment": true
+                    }
+                ],
+                "constraints": [
+                    {
+                        "name": "",
+                        "column_names": [
+                            "id"
+                        ],
+                        "type": "pk"
+                    },
+                    {
+                        "name": "udx_uid",
+                        "column_names": [
+                            "dep",
+                            "arr",
+                            "flightNo",
+                            "flightDate",
+                            "cabin"
+                        ],
+                        "type": "uk"
+                    },
+                    {
+                        "name": "idx_uptime",
+                        "column_names": [
+                            "uptime"
+                        ],
+                        "type": "idx"
+                    }
+                ],
+                "if_not_exists": false,
+                "engine": "InnoDb",
+                "charset": "utF8",
+                "collate": "Utf8mb4_general_ci",
+                "comment": "你号",
+                "auto_increment": ""
+            }
+        },
+        {
+            "type": "at",
+            "md": {
+                "schema": "test",
+                "table": "t1",
+                "ops": [
+                    {
+                        "type": "add_column",
+                        "after": "",
+                        "columns": [
+                            {
+                                "name": "arr",
+                                "type": "varchar(3)",
+                                "default": "",
+                                "comment": "注释",
+                                "not_null": true,
+                                "auto_increment": false
+                            }
+                        ]
+                    },
+                    {
+                        "Type": "drop_column",
+                        "column_name": "name"
+                    },
+                    {
+                        "type": "add_constraint",
+                        "constraint": {
+                            "name": "",
+                            "column_names": [
+                                "id",
+                                "name"
+                            ],
+                            "type": "pk"
+                        }
+                    },
+                    {
+                        "type": "add_constraint",
+                        "constraint": {
+                            "name": "idx_id_name",
+                            "column_names": [
+                                "id",
+                                "name"
+                            ],
+                            "type": "idx"
+                        }
+                    },
+                    {
+                        "type": "add_constraint",
+                        "constraint": {
+                            "name": "idx_id_name",
+                            "column_names": [
+                                "id",
+                                "name"
+                            ],
+                            "type": "uk"
+                        }
+                    },
+                    {
+                        "type": "drop_constraint",
+                        "constraint_type": "pk",
+                        "name": ""
+                    },
+                    {
+                        "type": "drop_constraint",
+                        "constraint_type": "idx",
+                        "name": "idx_id_name"
+                    },
+                    {
+                        "type": "modify_column",
+                        "after": "",
+                        "columns": [
+                            {
+                                "name": "arr",
+                                "type": "varchar(3)",
+                                "default": "",
+                                "comment": "注释",
+                                "not_null": true,
+                                "auto_increment": false
+                            }
+                        ]
+                    },
+                    {
+                        "type": "change_column",
+                        "old_name": "id",
+                        "after": "",
+                        "new_column": {
+                            "name": "id1",
+                            "type": "bigint(18)",
+                            "default": "",
+                            "comment": "主键",
+                            "not_null": true,
+                            "auto_increment": true
+                        }
+                    },
+                    {
+                        "type": "options",
+                        "options": [
+                            {
+                                "type": "charset",
+                                "value": "utf8mb4"
+                            },
+                            {
+                                "type": "engine",
+                                "value": "innodb"
+                            },
+                            {
+                                "type": "comment",
+                                "value": "表注释"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "rename_table",
+                        "schema": "test2",
+                        "table": "t2"
+                    },
+                    {
+                        "type": "rename_index",
+                        "old_name": "idx1",
+                        "new_name": "idx2"
+                    }
+                ]
+            }
+        }
+    ]
+}
+```
+
+**返回数据的解释**
+
+1. **Status:** `true`: 访问成功. `false`: 访问失败
+
+2. **Message:** 返回信息
+
+3. **Data:** 返回数据, 是一个数组. 数组中存放的就是元信息
+
+    - **Type:** `ct`: 建表元数据. `at`: Alter table元数据
+
+    - **md:** MetaData 元数据信息
+
+        - **schema:** 数据库
+
+        - **table:** 表
+
+        - **if_not_exists:** `true/false` 是否有 `if not exists` 子句
+
+        - **engine:** 存储引擎
+
+        - **charset:** 字符集
+
+        - **collate:** 排序
+
+        - **comment:** 注释
+
+        - **auto_increment:** `AUTO_INTREMENT` 值
+
+
 
 ## supervisor管理进程
 
