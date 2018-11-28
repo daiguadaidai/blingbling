@@ -80,9 +80,9 @@ func (this *AlterTableMetaParser) getColumns(spec *ast.AlterTableSpec) []*MetaCo
 			case ast.ColumnOptionNotNull:
 				mc.NotNull = true
 			case ast.ColumnOptionDefaultValue:
-				mc.Default = option.Expr.GetValue().(string)
+				mc.Default = option.Expr.GetValue()
 			case ast.ColumnOptionComment:
-				mc.Comment = option.Expr.GetValue().(string)
+				mc.Comment = option.Expr.GetValue()
 			case ast.ColumnOptionAutoIncrement:
 				mc.AutoIncrement = true
 			}

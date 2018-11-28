@@ -92,7 +92,7 @@ func (this *CreateTableMetaParser) addColumns() {
 			case ast.ColumnOptionDefaultValue:
 				metaColumn.Default = option.Expr.GetValue()
 			case ast.ColumnOptionComment:
-				metaColumn.Comment = option.Expr.GetValue().(string)
+				metaColumn.Comment = option.Expr.GetValue()
 			case ast.ColumnOptionAutoIncrement:
 				metaColumn.AutoIncrement = true
 			}
