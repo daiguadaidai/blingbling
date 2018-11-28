@@ -761,7 +761,7 @@ CREATE TABLE test.t1 (
   id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
   PRIMARY KEY (id),
   UNIQUE KEY udx_uid (dep, arr, flightNo, flightDate, cabin),
-  Index idx_uptime (uptime),
+  Index idx_uptime (uptime)
 ) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
 
 ALTER TABLE test.t1
