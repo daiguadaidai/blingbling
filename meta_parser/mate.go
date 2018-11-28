@@ -15,12 +15,12 @@ type MetaInfo struct {
 }
 
 type MetaColumn struct {
-	Name          string `json:"name"`
-	Type          string `json:"type"`
-	Default       string `json:"default"`
-	Comment       string `json:"comment"`
-	NotNull       bool   `json:"not_null"`
-	AutoIncrement bool   `json:"auto_increment"`
+	Name          string      `json:"name"`
+	Type          string      `json:"type"`
+	Default       interface{} `json:"default"`
+	Comment       interface{} `json:"comment"`
+	NotNull       bool        `json:"not_null"`
+	AutoIncrement bool        `json:"auto_increment"`
 }
 
 const (

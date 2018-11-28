@@ -62,3 +62,38 @@ CREATE TABLE test.t1 (
 		fmt.Println(string(jsonBytes))
 	}
 }
+
+func TestCreateTableMetaParser_MetaParse1(t *testing.T) {
+	sql := "" +
+		"create table `ad_merchant_market_list` ( `id` bigint(20) unsigned not null auto_increment comment 'id', `duo_id` bigint(20) unsigned not null default '0' comment 'duoid', `create_at` datetime default null comment '创建时间', `update_at` datetime default null comment '更新时间', `is_deleted` tinyint(2) unsigned not null default '0' comment '0:未删除;1：已删除', primary key (`id`) ) engine=innodb default charset=utf8mb4 comment='商家寻推列表'"
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	for _, stmtNode := range stmtNodes {
+		metaParser := NewMetaParser(stmtNode)
+		mi, err := metaParser.MetaParse()
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		mt := mi.MD.(*MetaCreateTable)
+		fmt.Println(mt.Schema, mt.Table, mt.Comment, mt.AutoIncrement, mt.Engine, mt.Charset, mt.Collate)
+
+		for _, col := range mt.Columns {
+			fmt.Println(col)
+		}
+
+		for _, cons := range mt.Constraints {
+			fmt.Println(cons)
+		}
+
+		jsonBytes, err := json.Marshal(mi)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		fmt.Println(string(jsonBytes))
+	}
+}
