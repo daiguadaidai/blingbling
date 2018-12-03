@@ -158,6 +158,7 @@ import (
 	like			"LIKE"
 	limit			"LIMIT"
 	lines 			"LINES"
+	list            "LIST"
 	load			"LOAD"
 	localTime		"LOCALTIME"
 	localTs			"LOCALTIMESTAMP"
@@ -758,6 +759,7 @@ import (
 	Values			"values"
 	ValuesList		"values list"
 	ValuesOpt		"values optional"
+	ValueOptOrValueList "values optional or values list"
 	VariableAssignment	"set variable value"
 	VariableAssignmentList	"set variable value list"
 	ViewAlgorithm		"view algorithm"
@@ -1796,6 +1798,18 @@ PartitionOpt:
 	{
 		$$ = nil
 	}
+|	"PARTITION" "BY" "LIST" "COLUMNS" '(' ColumnNameList ')' PartitionNumOpt PartitionDefinitionListOpt
+	{
+		var defs []*ast.PartitionDefinition
+		if $9 != nil {
+			defs = $9.([]*ast.PartitionDefinition)
+		}
+		$$ = &ast.PartitionOptions{
+			Tp:		model.PartitionTypeList,
+			ColumnNames:	$6.([]*ast.ColumnName),
+			Definitions:	defs,
+		}
+	}
 |	"PARTITION" "BY" "HASH" '(' Expression ')' PartitionNumOpt PartitionDefinitionListOpt
 	{
 		$$ = nil
@@ -1869,6 +1883,8 @@ PartitionDefinition:
 			Name: model.NewCIStr($2),
 		}
 		switch $3.(type) {
+		case [][]ast.ExprNode:
+			partDef.ValuesList = $3.([][]ast.ExprNode)
 		case []ast.ExprNode:
 			partDef.LessThan = $3.([]ast.ExprNode)
 		case ast.ExprNode:
@@ -1932,6 +1948,10 @@ PartDefValuesOpt:
 	{
 		$$ = $5
 	}
+|   "VALUES" "IN" '(' ValueOptOrValueList ')'
+    {
+        $$ = $4
+    }
 
 DuplicateOpt:
 	{
@@ -1982,6 +2002,12 @@ LikeTableWithOrWithoutParen:
 	'(' "LIKE" TableName ')'
 	{
 		$$ = $3
+	}
+
+ValueOptOrValueList:
+	ValuesOpt
+	{
+		$$ = $1
 	}
 
 /*******************************************************************
