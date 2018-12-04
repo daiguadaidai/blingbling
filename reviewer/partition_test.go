@@ -285,3 +285,52 @@ PARTITION BY LIST COLUMNS(store_id) (
 		}
 	}
 }
+
+func Test_Parition_AlterListPatition(t *testing.T) {
+	sql := `
+ALTER TABLE test.t1
+    ADD PARTITION (
+        PARTITION a VALUES IN (1, 2),
+        PARTITION b VALUES IN (3, 4)
+    ),
+    DROP PARTITION c;
+`
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	for _, stmtNode := range stmtNodes {
+		switch stmt := stmtNode.(type) {
+		case *ast.AlterTableStmt:
+			// stmt.Partition.ColumnNames
+			fmt.Println("table name:", stmt.Table.Name)
+			for _, spec := range stmt.Specs {
+				switch spec.Tp {
+				case ast.AlterTableAddPartitions:
+					fmt.Println("Alter table add partition: ")
+					for _, part := range spec.PartDefinitions {
+						fmt.Println(part.Name)
+						for _, item := range part.LessThan {
+							switch expr := item.(type) {
+							case *ast.RowExpr:
+								for _, v := range expr.Values {
+									fmt.Printf("%v, ", v.GetValue())
+								}
+								fmt.Println()
+							case *ast.ValueExpr:
+								fmt.Printf("%v, ", expr.GetValue())
+							}
+						}
+						fmt.Println()
+					}
+				case ast.AlterTableDropPartition:
+					fmt.Println("Alter Table Drop Partition: ", spec.Name)
+				}
+			}
+		}
+	}
+}
