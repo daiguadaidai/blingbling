@@ -759,7 +759,6 @@ import (
 	Values			"values"
 	ValuesList		"values list"
 	ValuesOpt		"values optional"
-	ValueOptOrValueList "values optional or values list"
 	VariableAssignment	"set variable value"
 	VariableAssignmentList	"set variable value list"
 	ViewAlgorithm		"view algorithm"
@@ -1798,6 +1797,18 @@ PartitionOpt:
 	{
 		$$ = nil
 	}
+|	"PARTITION" "BY" "LIST" '(' Expression ')' PartitionNumOpt PartitionDefinitionListOpt
+	{
+		var defs []*ast.PartitionDefinition
+		if $8 != nil {
+			defs = $8.([]*ast.PartitionDefinition)
+		}
+		$$ = &ast.PartitionOptions{
+			Tp:		model.PartitionTypeList,
+			Expr:	$5.(ast.ExprNode),
+			Definitions:	defs,
+		}
+	}
 |	"PARTITION" "BY" "LIST" "COLUMNS" '(' ColumnNameList ')' PartitionNumOpt PartitionDefinitionListOpt
 	{
 		var defs []*ast.PartitionDefinition
@@ -1883,8 +1894,6 @@ PartitionDefinition:
 			Name: model.NewCIStr($2),
 		}
 		switch $3.(type) {
-		case [][]ast.ExprNode:
-			partDef.ValuesList = $3.([][]ast.ExprNode)
 		case []ast.ExprNode:
 			partDef.LessThan = $3.([]ast.ExprNode)
 		case ast.ExprNode:
@@ -1948,7 +1957,7 @@ PartDefValuesOpt:
 	{
 		$$ = $5
 	}
-|   "VALUES" "IN" '(' ValueOptOrValueList ')'
+|   "VALUES" "IN" '(' ExpressionList ')'
     {
         $$ = $4
     }
@@ -2002,12 +2011,6 @@ LikeTableWithOrWithoutParen:
 	'(' "LIKE" TableName ')'
 	{
 		$$ = $3
-	}
-
-ValueOptOrValueList:
-	ValuesOpt
-	{
-		$$ = $1
 	}
 
 /*******************************************************************
