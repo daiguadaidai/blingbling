@@ -369,9 +369,9 @@ func (this *CreateTableReviewer) IncrColumnTypeCount(_column *ast.ColumnDef) {
 	switch _column.Tp.Tp {
 	case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob:
 		// 4种大字段都设置为是 Blob
-		this.ColumnTypeCount[mysql.TypeBlob] ++
+		this.ColumnTypeCount[mysql.TypeBlob]++
 	default:
-		this.ColumnTypeCount[_column.Tp.Tp] ++
+		this.ColumnTypeCount[_column.Tp.Tp]++
 	}
 }
 
@@ -410,7 +410,7 @@ func (this *CreateTableReviewer) DetectHasPK() (haveError bool) {
 		if len(this.PKColumnNames) < 1 {
 			msg := fmt.Sprintf("检测失败. 表: %v. 没有主键. %v",
 				this.StmtNode.Table.Name.String(), config.MSG_NEED_PK)
-			haveError = false
+			haveError = true
 			this.ReviewMSG.AppendMSG(haveError, msg)
 			return
 		}
@@ -566,7 +566,7 @@ func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
 /* 检测主键约束相关东西
 Params:
 	_constraint: 约束信息
- */
+*/
 func (this *CreateTableReviewer) DectectConstraintPrimaryKey(_constraint *ast.Constraint) (haveError bool) {
 	// 检测在字段定义字句中和约束定义字句中是否有重复定义 主键
 	if len(this.PKColumnNames) > 0 {
@@ -581,8 +581,8 @@ func (this *CreateTableReviewer) DectectConstraintPrimaryKey(_constraint *ast.Co
 }
 
 /* 检测索引相关信息
-	_constraint: 约束信息
- */
+_constraint: 约束信息
+*/
 func (this *CreateTableReviewer) DectectConstraintIndex(_constraint *ast.Constraint) (haveError bool) {
 	// 检测索引命名规范
 	haveError, _ = DetectNameReg(_constraint.Name, this.ReviewConfig.RuleIndexNameReg)
@@ -598,8 +598,8 @@ func (this *CreateTableReviewer) DectectConstraintIndex(_constraint *ast.Constra
 }
 
 /* 检测索引相关信息
-	_constraint: 约束信息
- */
+_constraint: 约束信息
+*/
 func (this *CreateTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Constraint) (haveError bool) {
 	// 间隔唯一索引命名规范
 	haveError, _ = DetectNameReg(_constraint.Name, this.ReviewConfig.RuleUniqueIndexNameReg)
@@ -816,7 +816,7 @@ func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() (haveError b
 
 // 检测分区表
 func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
-	if this.StmtNode.Partition != nil {
+	if this.StmtNode.Partition.ColumnNames != nil && len(this.StmtNode.Partition.ColumnNames) > 0 {
 		// 获取分区表字段
 		if len(this.StmtNode.Partition.ColumnNames) > 0 {
 			for _, columnName := range this.StmtNode.Partition.ColumnNames {
@@ -880,7 +880,7 @@ func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
 				for _, partitionHashName := range partitionHashNames {
 					if !common.StrIsMatch(hashUniqueIndex, partitionHashName) {
 						msg := fmt.Sprintf("检测失败. 表: %v. 唯一索引: %v 没有包含分区字段: %v",
-							this.StmtNode.Table.Name.String(), uniqueIndexName, this.PartitionColumns)
+							this.StmtNode.Table.Name.String(), uniqueIndexName)
 						haveError = true
 						this.ReviewMSG.AppendMSG(haveError, msg)
 						return
@@ -930,7 +930,7 @@ func (this *CreateTableReviewer) DetectInstanceTable() (haveError bool) {
 /* 检测是否有重复索引
 Params:
     _tableInfo: 原表信息
- */
+*/
 func (this *CreateTableReviewer) DetectDuplecateIndex() (haveError bool) {
 	hashNormalIndex := GetIndexesHashColumn(this.Indexes)
 
@@ -956,7 +956,7 @@ func (this *CreateTableReviewer) DetectDuplecateIndex() (haveError bool) {
 /* 检测索引个数是否超过指定个数
 Params:
     _tableInfo: 原表信息
- */
+*/
 func (this *CreateTableReviewer) DetectIndexCount() (haveError bool) {
 	if len(this.Indexes) > this.ReviewConfig.RuleIndexCount {
 		msg := fmt.Sprintf("检测失败. %v",

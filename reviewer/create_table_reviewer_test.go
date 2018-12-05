@@ -597,3 +597,111 @@ create table cps_transfer_flow_127 (
 		// createStmtNode := stmtNode.(*ast.CreateTableStmt)
 	}
 }
+
+func TestCreateTableReviewer_Review_Partition_PartitionListColumns(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle"
+	sql := `
+CREATE TABLE tblist (
+    id INT NOT NULL AUTO_INCREMENT COMMENT '注释',
+    store_id INT NOT NULL COMMENT '注释 store_id',
+    primary key(id, store_id)
+) comment '表注释'
+PARTITION BY LIST COLUMNS(store_id) (
+    PARTITION a VALUES IN (1,5,6),
+    PARTITION b VALUES IN (2,7,8),
+    PARTITION c VALUES IN (3,9,10),
+    PARTITION d VALUES IN (4,11,12)
+);
+    `
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, "")
+	reviewConfig := config.NewReviewConfig()
+	reviewMSGs := make([]*ReviewMSG, 0, 1)
+	for _, stmtNode := range stmtNodes {
+		createTableStmt := stmtNode.(*ast.CreateTableStmt)
+		fmt.Printf("Schema: %v, Table: %v\n", createTableStmt.Table.Schema.String(),
+			createTableStmt.Table.Name.String())
+		// 建表 option
+		for _, option := range createTableStmt.Options {
+			fmt.Printf("type: %v, value: %v, int: %v\n", option.Tp, option.StrValue, option.UintValue)
+		}
+
+		for i, constraint := range createTableStmt.Constraints {
+			fmt.Println(i, constraint)
+			switch constraint.Tp {
+			case ast.ConstraintPrimaryKey:
+				fmt.Println(i, "ConstraintPrimaryKey")
+			case ast.ConstraintKey:
+				fmt.Println(i, "ConstraintKey")
+			case ast.ConstraintIndex:
+				fmt.Println(i, "ConstraintIndex")
+			case ast.ConstraintUniq:
+				fmt.Println(i, "ConstraintUniq")
+			case ast.ConstraintUniqKey:
+				fmt.Println(i, "ConstraintUniqKey")
+			case ast.ConstraintUniqIndex:
+				fmt.Println(i, "ConstraintUniqIndex")
+			case ast.ConstraintForeignKey:
+				fmt.Println(i, "ConstraintForeignKey")
+			case ast.ConstraintFulltext:
+				fmt.Println(i, "ConstraintFulltext")
+			default:
+				fmt.Println(i, "Default")
+			}
+
+		}
+
+		// 字段option
+		for i, column := range createTableStmt.Cols {
+			fmt.Println(i, column.Name.String(), column.Tp.Tp, column.Tp.Tp == mysql.TypeBlob)
+			optionTypes := make([]string, 0, 1)
+			for _, option := range column.Options {
+				switch option.Tp {
+				case ast.ColumnOptionPrimaryKey:
+					optionTypes = append(optionTypes, "PrimaryKey")
+				case ast.ColumnOptionNotNull:
+					optionTypes = append(optionTypes, "NotNull")
+				case ast.ColumnOptionAutoIncrement:
+					optionTypes = append(optionTypes, "AutoIncrement")
+				case ast.ColumnOptionDefaultValue:
+					optionTypes = append(optionTypes, fmt.Sprintf("DefaultValue:%v", option.Expr.GetValue()))
+				case ast.ColumnOptionUniqKey:
+					optionTypes = append(optionTypes, "UniqKey")
+				case ast.ColumnOptionNull:
+					optionTypes = append(optionTypes, "NULL")
+				case ast.ColumnOptionOnUpdate:
+					optionTypes = append(optionTypes, "OnUpdate")
+				case ast.ColumnOptionFulltext:
+					optionTypes = append(optionTypes, "Fulltext")
+				case ast.ColumnOptionComment:
+					optionTypes = append(optionTypes, fmt.Sprintf("Comment:%v", option.Expr.GetValue()))
+				case ast.ColumnOptionGenerated:
+					optionTypes = append(optionTypes, "Generated")
+				case ast.ColumnOptionReference:
+					optionTypes = append(optionTypes, "Reference")
+				}
+			}
+			fmt.Println("column Name:", column.Name.String(), optionTypes)
+		}
+
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		reviewMSGs = append(reviewMSGs, reviewMSG)
+	}
+
+	for _, reviewMSG := range reviewMSGs {
+		if reviewMSG != nil {
+			fmt.Println(reviewMSG.String())
+		}
+	}
+}
