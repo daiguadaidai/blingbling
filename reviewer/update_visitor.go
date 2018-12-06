@@ -1,8 +1,6 @@
 package reviewer
 
 import (
-	"fmt"
-
 	"github.com/daiguadaidai/blingbling/ast"
 )
 
@@ -33,7 +31,7 @@ func NewUpdateVisitor() *UpdateVisitor {
 }
 
 func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
-	fmt.Printf("Enter: %T, %[1]v\n", in)
+	// fmt.Printf("Enter: %T, %[1]v\n", in)
 
 	// 解析和设置正在解析的语句块是哪块
 	switch stmt := in.(type) {
@@ -52,7 +50,7 @@ func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 			this.IsInSetClause { // 设置set子句中的第一次遇到where
 			if _, ok := this.SetSubClauseLevelMeetFirstWhere[this.SetSubClauseCount]; !ok {
 				this.SetSubClauseLevelMeetFirstWhere[this.SetSubClauseCount] = true
-				this.SetSubClauseWhereCount ++
+				this.SetSubClauseWhereCount++
 			}
 		}
 	case *ast.PatternInExpr:
@@ -93,8 +91,8 @@ func (this *UpdateVisitor) Enter(in ast.Node) (out ast.Node, skipChildren bool) 
 	case *ast.ColumnName:
 	case *ast.ValueExpr:
 	case *ast.SelectStmt:
-		this.SetSubClauseCount ++
-		this.SubClauseLevel ++
+		this.SetSubClauseCount++
+		this.SubClauseLevel++
 		if !this.HasSubClause {
 			this.HasSubClause = true
 		}
@@ -112,7 +110,7 @@ func (this *UpdateVisitor) Leave(in ast.Node) (out ast.Node, ok bool) {
 	// fmt.Printf("Leave: %T\n", in)
 	switch in.(type) {
 	case *ast.SelectStmt:
-		this.SubClauseLevel --
+		this.SubClauseLevel--
 	case *ast.Assignment:
 		this.IsInSetClause = false
 		this.SetSubClauseLevelMeetFirstWhere = make(map[int]bool) // 重新开始计算每个set中的where
