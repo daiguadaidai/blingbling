@@ -329,6 +329,7 @@ curl http://127.0.0.1:19527/ClientParams
     RuleAllowInsertNoColumn            bool            是否允许不指定字段
     RuleAllowInsertIgnore              bool            是否允许 insert ignore
     RuleAllowInsertReplace             bool            是否允许 replace into
+    RuleIndexCharLength                int             索引允许的长度. 默认:767
 
     ------------------------- 是否自定义, 自定义审核规则参数 -------------------------------
     CustomRuleNameLength               bool            是否自定义, 通用名字长度
@@ -384,6 +385,7 @@ curl http://127.0.0.1:19527/ClientParams
     CustomRuleAllowInsertNoColumn      bool            是否自定义, 是否允许不指定字段
     CustomRuleAllowInsertIgnore        bool            是否自定义, 是否允许 insert ignore
     CustomRuleAllowInsertReplace       bool            是否自定义, 是否允许 replace boolo
+    CustomRuleIndexCharLength          bool            是否自定义, 索引允许的长度
 ```
 
 可以将网址输入到流量器中查看
