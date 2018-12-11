@@ -7,7 +7,6 @@ import (
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/common"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
 )
 
@@ -29,6 +28,7 @@ type AlterTableReviewer struct {
 	AutoIncrementName string              // 自增字段名字
 	AddPartitions     map[string]bool     // 需要添加的分区
 	DropPartitions    map[string]bool     // 需要删除的分区
+	ColumnsCharLenMap map[string]int      // 每个字段
 
 	NotAllowColumnTypeMap   map[string]bool // 不允许的字段类型
 	NotNullColumnTypeMap    map[string]bool // 必须为not null的字段类型
@@ -54,6 +54,7 @@ func (this *AlterTableReviewer) Init() {
 	this.AfterColumnNames = make(map[string]bool)
 	this.AddPartitions = make(map[string]bool)
 	this.DropPartitions = make(map[string]bool)
+	this.ColumnsCharLenMap = make(map[string]int)
 
 	this.NotAllowColumnTypeMap = this.ReviewConfig.GetNotAllowColumnTypeMap()
 	this.NotNullColumnTypeMap = this.ReviewConfig.GetNotNullColumnTypeMap()
@@ -128,6 +129,12 @@ func (this *AlterTableReviewer) Review() *ReviewMSG {
 		}
 	}
 
+	// 在没有链接数据库的时候也需要检测一下索引长度是否超过
+	haveError = this.DetectIndexCharLengthNoInstance()
+	if haveError {
+		return this.ReViewMSG
+	}
+
 	// 和实例中的表进行检测
 	haveError = this.DetectInstanceTable()
 	if haveError {
@@ -140,7 +147,7 @@ func (this *AlterTableReviewer) Review() *ReviewMSG {
 /* 检测添加字段字句
 Params:
     _spec: 添加字段字句
- */
+*/
 func (this *AlterTableReviewer) DetectAddColumn(_spec *ast.AlterTableSpec) (haveError bool) {
 	for _, column := range _spec.NewColumns {
 		// 检测新增字段
@@ -161,16 +168,16 @@ func (this *AlterTableReviewer) IncrColumnTypeCount(_column *ast.ColumnDef) {
 	switch _column.Tp.Tp {
 	case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob:
 		// 4种大字段都设置为是 Blob
-		this.ColumnTypeCount[mysql.TypeBlob] ++
+		this.ColumnTypeCount[mysql.TypeBlob]++
 	default:
-		this.ColumnTypeCount[_column.Tp.Tp] ++
+		this.ColumnTypeCount[_column.Tp.Tp]++
 	}
 }
 
 /* 检测删除字段语句
 Params:
     _spec: 删除字段字句
- */
+*/
 func (this *AlterTableReviewer) DetectDropColumn(_spec *ast.AlterTableSpec) (haveError bool) {
 	// 不允许删除字段
 	if !this.ReviewConfig.RuleAllowDropColumn {
@@ -197,7 +204,7 @@ func (this *AlterTableReviewer) DetectDropColumn(_spec *ast.AlterTableSpec) (hav
 /* 检测modify 子句
 Params:
     _spec: modify 子句
- */
+*/
 func (this *AlterTableReviewer) DetectModifyColumn(_spec *ast.AlterTableSpec) (haveError bool) {
 	for _, column := range _spec.NewColumns {
 		// 检测新增字段
@@ -256,7 +263,7 @@ Params:
     _column: 字段定义
     _spec: 子句
     _state: 是那个场景的字段. alter add/modify/change
- */
+*/
 func (this *AlterTableReviewer) DetectNewColumn(
 	_column *ast.ColumnDef,
 	_spec *ast.AlterTableSpec,
@@ -442,13 +449,22 @@ func (this *AlterTableReviewer) DetectNewColumn(
 		}
 	}
 
+	// 添加字段定义长度
+	len, err := GetColumnDefineCharLen(_column)
+	if err != nil {
+		haveError = true
+		this.ReViewMSG.AppendMSG(haveError, err.Error())
+		return
+	}
+	this.ColumnsCharLenMap[_column.Name.String()] = len
+
 	return
 }
 
 /* 检测修改表名称
 Params:
     _spec: 子句
- */
+*/
 func (this *AlterTableReviewer) DetectRenameTable(_spec *ast.AlterTableSpec) (haveError bool) {
 	if !this.ReviewConfig.RuleAllowRenameTable {
 		haveError = true
@@ -575,7 +591,7 @@ func (this *AlterTableReviewer) DetectAddConstraint(_spec *ast.AlterTableSpec) (
 /* 检测主键约束相关东西
 Params:
 	_constraint: 约束信息
- */
+*/
 func (this *AlterTableReviewer) DectectConstraintPrimaryKey(_constraint *ast.Constraint) (haveError bool) {
 	// 检测在字段定义字句中和约束定义字句中是否有重复定义 主键
 	if len(this.PKColumnNames) > 0 {
@@ -600,8 +616,8 @@ func (this *AlterTableReviewer) DectectConstraintPrimaryKey(_constraint *ast.Con
 }
 
 /* 检测索引相关信息
-	_constraint: 约束信息
- */
+_constraint: 约束信息
+*/
 func (this *AlterTableReviewer) DectectConstraintIndex(_constraint *ast.Constraint) (haveError bool) {
 	// 检测索引命名规范
 	haveError, _ = DetectNameReg(_constraint.Name, this.ReviewConfig.RuleIndexNameReg)
@@ -617,8 +633,8 @@ func (this *AlterTableReviewer) DectectConstraintIndex(_constraint *ast.Constrai
 }
 
 /* 检测索引相关信息
-	_constraint: 约束信息
- */
+_constraint: 约束信息
+*/
 func (this *AlterTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Constraint) (haveError bool) {
 	// 间隔唯一索引命名规范
 	haveError, _ = DetectNameReg(_constraint.Name, this.ReviewConfig.RuleUniqueIndexNameReg)
@@ -643,7 +659,7 @@ func (this *AlterTableReviewer) DectectConstraintUniqIndex(_constraint *ast.Cons
 /* 检测删除索引
 Params:
     _spec: 子句
- */
+*/
 func (this *AlterTableReviewer) DetectDropIndex(_spec *ast.AlterTableSpec) (haveError bool) {
 	if !this.ReviewConfig.RuleAllowDropIndex {
 		haveError = true
@@ -668,7 +684,7 @@ func (this *AlterTableReviewer) DetectDropIndex(_spec *ast.AlterTableSpec) (have
 /* 检测删除主键
 Params:
     _spec: 子句
- */
+*/
 func (this *AlterTableReviewer) DetectDropPrimaryKey(_spec *ast.AlterTableSpec) (haveError bool) {
 	if !this.ReviewConfig.RuleAllowDropPrimaryKey {
 		haveError = true
@@ -683,8 +699,8 @@ func (this *AlterTableReviewer) DetectDropPrimaryKey(_spec *ast.AlterTableSpec) 
 }
 
 /* 检测从命名索引
-    _spec: 子句
- */
+   _spec: 子句
+*/
 func (this *AlterTableReviewer) DetectRenameIndex(_spec *ast.AlterTableSpec) (haveError bool) {
 	// 是否允许重命名索引
 	if !this.ReviewConfig.RuleAllowRenameIndex {
@@ -750,7 +766,7 @@ func (this *AlterTableReviewer) DetectAddPartition(_spec *ast.AlterTableSpec) (h
 /* 检测需要删除的分区
 Params:
     _spec: 子句
- */
+*/
 func (this *AlterTableReviewer) DetectDropPartition(_spec *ast.AlterTableSpec) (haveError bool) {
 	// 是否允许删除分区
 	if !this.ReviewConfig.RuleAllowDropPartition {
@@ -776,7 +792,7 @@ func (this *AlterTableReviewer) DetectDropPartition(_spec *ast.AlterTableSpec) (
 /* 检测表操作
 Params:
 	_spec: 子句
- */
+*/
 func (this *AlterTableReviewer) DetectTableOptions(_spec *ast.AlterTableSpec) (haveError bool) {
 	for _, option := range _spec.Options {
 		var msg string
@@ -814,7 +830,7 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 		this.NewSchemaName = this.OldSchemaName
 	}
 
-	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	tableInfo := NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
 	err := tableInfo.OpenInstance()
 	if err != nil { // 无法链接原实例就没必要在继续往下检测了, 不过这只是警告
 		msg := fmt.Sprintf("警告: sql语法正确, 但无法链接到指定实例. 无法检测数据库是否存在.")
@@ -883,6 +899,7 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 		tableInfo.CloseInstance()
 		return
 	}
+	tableInfo.CloseInstance()
 
 	// 检测索引个数是否超过指定
 	haveError = this.DetectIndexCount(tableInfo)
@@ -950,15 +967,20 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 		return
 	}
 
-	tableInfo.CloseInstance()
+	// 检测索引长度
+	haveError = this.DetectIndexCharLength(this.ColumnsCharLenMap, tableInfo.ColumnsCharLenMap)
+	if haveError {
+		return
+	}
+
 	return
 }
 
 /* 检测实例主键信息
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *TableInfo) (haveError bool) {
 	// 检测主键相关
 	if len(this.PKColumnNames) > 0 {
 		// 检测主键是否有重复定义, 并且该alter语句没有删除主键语句
@@ -983,7 +1005,7 @@ func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *dao.TableInfo) 
 	return
 }
 
-func (this *AlterTableReviewer) DetectInstanceColumnInfo(_tableInfo *dao.TableInfo) (haveError bool) {
+func (this *AlterTableReviewer) DetectInstanceColumnInfo(_tableInfo *TableInfo) (haveError bool) {
 	// 需要删除/重命名的字段是否存在
 	for columnName, _ := range this.DropColumns {
 		if _, ok := _tableInfo.ColumnNameMap[columnName]; !ok {
@@ -1010,8 +1032,8 @@ func (this *AlterTableReviewer) DetectInstanceColumnInfo(_tableInfo *dao.TableIn
 /* 检测text字段个数是否超过指定
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectTextColumnTypeCount(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectTextColumnTypeCount(_tableInfo *TableInfo) (haveError bool) {
 	// 获取新添加的text字段个数
 	addTextCount, ok := this.ColumnTypeCount[mysql.TypeBlob]
 	if !ok {
@@ -1037,8 +1059,8 @@ func (this *AlterTableReviewer) DetectTextColumnTypeCount(_tableInfo *dao.TableI
 /* 检测partition 相关信息
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectInstancePartition(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectInstancePartition(_tableInfo *TableInfo) (haveError bool) {
 	// 新增的 partition是否已经存在
 	for partition, _ := range this.AddPartitions {
 		if _, ok := _tableInfo.PartitionNames[partition]; ok {
@@ -1065,8 +1087,8 @@ func (this *AlterTableReviewer) DetectInstancePartition(_tableInfo *dao.TableInf
 /* 检测必须包含的字段名
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectHaveColumnName(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectHaveColumnName(_tableInfo *TableInfo) (haveError bool) {
 	// 检测必须要有的字段
 	for haveColumnName, _ := range this.ReviewConfig.GetHaveColumnNameMap() {
 		// 先判断是否有该字段
@@ -1088,8 +1110,8 @@ func (this *AlterTableReviewer) DetectHaveColumnName(_tableInfo *dao.TableInfo) 
 /* 检测必须指定索引的字段名, 并且必须是索引的第一个字段
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectNeedIndexColumnName(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectNeedIndexColumnName(_tableInfo *TableInfo) (haveError bool) {
 	// 循环必须要有索引的字段.
 	for needIndexColumnName, _ := range this.ReviewConfig.GetNeedIndexColumnNameMap() {
 		// 先判断是否有该字段
@@ -1125,7 +1147,7 @@ func (this *AlterTableReviewer) DetectNeedIndexColumnName(_tableInfo *dao.TableI
 Params:
     _tableInfo: 原表信息
 */
-func (this *AlterTableReviewer) DetectAllIndexHaveUniqueIndex(_tableInfo *dao.TableInfo) (haveError bool) {
+func (this *AlterTableReviewer) DetectAllIndexHaveUniqueIndex(_tableInfo *TableInfo) (haveError bool) {
 	normalIndexes := CombineIndexes(_tableInfo.Indexes, this.AddIndexes)
 	uniqueIndexes := CombineIndexes(_tableInfo.UniqueIndexes, this.AddUniqueIndexes)
 	hashNormalIndex := GetIndexesHashColumn(normalIndexes)
@@ -1153,8 +1175,8 @@ func (this *AlterTableReviewer) DetectAllIndexHaveUniqueIndex(_tableInfo *dao.Ta
 /* 检测是否有重复索引
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectDuplecateIndex(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectDuplecateIndex(_tableInfo *TableInfo) (haveError bool) {
 	normalIndexes := CombineIndexes(_tableInfo.Indexes, this.AddIndexes)
 	hashNormalIndex := GetIndexesHashColumn(normalIndexes)
 
@@ -1165,7 +1187,7 @@ func (this *AlterTableReviewer) DetectDuplecateIndex(_tableInfo *dao.TableInfo) 
 			if normalIndexName1 == normalIndexName2 { // 同一个索引不进行比较
 				continue
 			}
-			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
+			if isMatch := strings.HasPrefix(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
 				msg := fmt.Sprintf("检测失败. 检测到重复索引: %v <=> %v.",
 					normalIndexName1, normalIndexName2)
 				this.ReViewMSG.AppendMSG(haveError, msg)
@@ -1180,8 +1202,8 @@ func (this *AlterTableReviewer) DetectDuplecateIndex(_tableInfo *dao.TableInfo) 
 /* 检测索引中的字段是否都存在
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectIndexColumnExists(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectIndexColumnExists(_tableInfo *TableInfo) (haveError bool) {
 	for indexName, columns := range this.AddIndexes {
 		if len(columns) == 0 {
 			continue
@@ -1206,14 +1228,14 @@ func (this *AlterTableReviewer) DetectIndexColumnExists(_tableInfo *dao.TableInf
 /* 检测索引个数是否超过指定个数
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectIndexCount(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectIndexCount(_tableInfo *TableInfo) (haveError bool) {
 	addIndexCount := 0
 	for _, columns := range this.AddIndexes { // 剔除rename索引操作加入的索引
 		if len(columns) == 0 {
 			continue
 		}
-		addIndexCount ++
+		addIndexCount++
 	}
 
 	if addIndexCount+len(_tableInfo.Indexes) > this.ReviewConfig.RuleIndexCount {
@@ -1230,8 +1252,8 @@ func (this *AlterTableReviewer) DetectIndexCount(_tableInfo *dao.TableInfo) (hav
 /* 检测After子句的字段是否存在
 Params:
     _tableInfo: 原表信息
- */
-func (this *AlterTableReviewer) DetectAfterColumnExists(_tableInfo *dao.TableInfo) (haveError bool) {
+*/
+func (this *AlterTableReviewer) DetectAfterColumnExists(_tableInfo *TableInfo) (haveError bool) {
 	for afterColumnName, _ := range this.AfterColumnNames {
 		if _, ok := _tableInfo.ColumnNameMap[afterColumnName]; !ok {
 			if _, ok := this.AddColumns[afterColumnName]; !ok {
@@ -1243,5 +1265,36 @@ func (this *AlterTableReviewer) DetectAfterColumnExists(_tableInfo *dao.TableInf
 		}
 	}
 
+	return
+}
+
+// 检测索引的字符长度, 没有获取数据库中的源数据
+func (this *AlterTableReviewer) DetectIndexCharLengthNoInstance() (haveError bool) {
+	for name, columnNames := range this.AddIndexes {
+		len := GetColumnsCharLen(this.ColumnsCharLenMap, columnNames...)
+		if len > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("检测失败(没有链接数据库). 索引:%v. %v", name,
+				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
+			haveError = true
+			this.ReViewMSG.AppendMSG(haveError, msg)
+			return
+		}
+	}
+	return
+}
+
+// 检测索引的字符长度, 没有获取数据库中的源数据
+func (this *AlterTableReviewer) DetectIndexCharLength(maps ...map[string]int) (haveError bool) {
+	lenMap := common.CombindMapStrInt(maps...)
+	for name, columnNames := range this.AddIndexes {
+		len := GetColumnsCharLen(lenMap, columnNames...)
+		if len > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("检测失败. 索引:%v. %v", name,
+				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
+			haveError = true
+			this.ReViewMSG.AppendMSG(haveError, msg)
+			return
+		}
+	}
 	return
 }

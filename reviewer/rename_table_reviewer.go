@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type RenameTableReviewer struct {
@@ -102,7 +101,7 @@ func (this *RenameTableReviewer) DetectDBNameReg(_name string) (haveError bool) 
 /* 检测数据库名长度
 Params:
     _name: 需要检测的名称
- */
+*/
 func (this *RenameTableReviewer) DetectToTableNameLength(_name string) (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameLength(_name, this.ReviewConfig.RuleNameLength)
@@ -117,7 +116,7 @@ func (this *RenameTableReviewer) DetectToTableNameLength(_name string) (haveErro
 /* 检测数据库命名规范
 Params:
     _name: 需要检测的名称
- */
+*/
 func (this *RenameTableReviewer) DetectToTableNameReg(_name string) (haveError bool) {
 	var msg string
 	haveError, msg = DetectNameReg(_name, this.ReviewConfig.RuleTableNameReg)
@@ -134,7 +133,7 @@ func (this *RenameTableReviewer) DetectToTableNameReg(_name string) (haveError b
 
 // 链接指定实例检测相关表信息(所有)
 func (this *RenameTableReviewer) DetectInstanceTables() (haveError bool) {
-	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo := NewTableInfo(this.DBConfig, "")
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg := fmt.Sprintf("警告: 无法链接到指定实例. 删除表sql. %v", err)
@@ -180,9 +179,9 @@ Params:
 	_OldTableName 原表名
 	_NewDBName 新库名
 	_NewTableName 新表名
- */
+*/
 func (this *RenameTableReviewer) DetectInstanceTable(
-	_tableInfo *dao.TableInfo,
+	_tableInfo *TableInfo,
 	_OldDBName string,
 	_OldTableName string,
 	_NewDBName string,

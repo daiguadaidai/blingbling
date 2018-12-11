@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type TruncateTableReviewer struct {
@@ -52,7 +51,7 @@ func (this *TruncateTableReviewer) Review() *ReviewMSG {
 func (this *TruncateTableReviewer) DetectInstanceTable() (haveError bool) {
 	var msg string
 
-	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	tableInfo := NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")

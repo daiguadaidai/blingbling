@@ -7,7 +7,6 @@ import (
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/common"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
 )
 
@@ -35,6 +34,7 @@ type CreateTableReviewer struct {
 	ColumnTypeCount         map[byte]int        // 保存字段类型出现的个数
 	PartitionColumns        []string
 	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
+	ColumnsCharLenMap       map[string]int  // 每个字段
 
 	SchemaName string
 }
@@ -53,6 +53,7 @@ func (this *CreateTableReviewer) Init() {
 	this.ColumnTypeCount = make(map[byte]int)
 	this.PartitionColumns = make([]string, 0, 1)
 	this.NeedDefaultValueNameMap = this.ReviewConfig.GetNeedDefaultValueNameMap()
+	this.ColumnsCharLenMap = make(map[string]int)
 
 	if this.StmtNode.Table.Schema.String() != "" {
 		this.SchemaName = this.StmtNode.Table.Schema.String()
@@ -161,7 +162,7 @@ func (this *CreateTableReviewer) DetectTableNameReg(_name string) (haveError boo
 func (this *CreateTableReviewer) DetectCreateTableLike() (haveError bool) {
 	var msg string
 
-	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	tableInfo := NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
@@ -276,6 +277,12 @@ func (this *CreateTableReviewer) DetectNoCreateTableLike() (haveError bool) {
 		return
 	}
 
+	// 检测索引字段长度是否大于指定
+	haveError = this.DetectIndexCharLength()
+	if haveError {
+		return
+	}
+
 	// 链接实例检测表相关信息
 	haveError = this.DetectInstanceTable()
 	if haveError {
@@ -359,6 +366,15 @@ func (this *CreateTableReviewer) DetectColumns() (haveError bool) {
 
 		// 5. 字段定义选项
 		this.SetReviewPkInfo(column)
+
+		// 6. 获取字段定义长度
+		len, err := GetColumnDefineCharLen(column)
+		if err != nil {
+			haveError = true
+			this.ReviewMSG.AppendMSG(haveError, err.Error())
+			return
+		}
+		this.ColumnsCharLenMap[column.Name.String()] = len
 	}
 
 	return
@@ -816,6 +832,10 @@ func (this *CreateTableReviewer) DetectNormalIndexHaveUniqueIndex() (haveError b
 
 // 检测分区表
 func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
+	if this.StmtNode.Partition == nil {
+		return
+	}
+
 	if this.StmtNode.Partition.ColumnNames != nil && len(this.StmtNode.Partition.ColumnNames) > 0 {
 		// 获取分区表字段
 		if len(this.StmtNode.Partition.ColumnNames) > 0 {
@@ -906,7 +926,7 @@ func (this *CreateTableReviewer) DetectPartition() (haveError bool) {
 // 链接指定实例检测相关表信息
 func (this *CreateTableReviewer) DetectInstanceTable() (haveError bool) {
 	var msg string
-	tableInfo := dao.NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
+	tableInfo := NewTableInfo(this.DBConfig, this.StmtNode.Table.Name.String())
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在.")
@@ -941,7 +961,7 @@ func (this *CreateTableReviewer) DetectDuplecateIndex() (haveError bool) {
 			if normalIndexName1 == normalIndexName2 { // 同一个索引不进行比较
 				continue
 			}
-			if isMatch := common.StrIsMatch(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
+			if isMatch := strings.HasPrefix(hashNormalIndexStr1, hashNormalIndexStr2); isMatch {
 				msg := fmt.Sprintf("检测失败. 检测到重复索引: %v <=> %v.",
 					normalIndexName1, normalIndexName2)
 				this.ReviewMSG.AppendMSG(haveError, msg)
@@ -966,5 +986,20 @@ func (this *CreateTableReviewer) DetectIndexCount() (haveError bool) {
 		return
 	}
 
+	return
+}
+
+// 检测索引的字符长度
+func (this *CreateTableReviewer) DetectIndexCharLength() (haveError bool) {
+	for name, columnNames := range this.Indexes {
+		len := GetColumnsCharLen(this.ColumnsCharLenMap, columnNames...)
+		if len > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("检测失败. 索引:%v. %v", name,
+				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
+			haveError = true
+			this.ReviewMSG.AppendMSG(haveError, msg)
+			return
+		}
+	}
 	return
 }

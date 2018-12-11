@@ -108,4 +108,6 @@ const (
 	MSG_ALLOW_INSERT_IGNORE_ERROR = "不允许 insert ignore 操作"
 	// 是否允许 replace into
 	MSG_ALLOW_INSERT_REPLIACE_ERROR = "不允许replace into 操作"
+	// 索引字符长度
+	MSG_INDEX_CHAR_LENGTH_ERROR = "索引长度不能超过 %d"
 )

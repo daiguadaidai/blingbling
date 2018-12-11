@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type UpdateReviewer struct {
@@ -125,7 +124,7 @@ func (this *UpdateReviewer) DetectUpdateLimit() (haveError bool) {
 
 // 和原表结合进行检测
 func (this *UpdateReviewer) DetectFromInstance() (haveError bool) {
-	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo := NewTableInfo(this.DBConfig, "")
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg := fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在. %v", err)
@@ -145,7 +144,7 @@ func (this *UpdateReviewer) DetectFromInstance() (haveError bool) {
 	return
 }
 
-func (this *UpdateReviewer) DetectUpdateRowCount(tableInfo *dao.TableInfo) (haveError bool) {
+func (this *UpdateReviewer) DetectUpdateRowCount(tableInfo *TableInfo) (haveError bool) {
 	explainSelectSql, err := GetExplainSelectSqlByUpdateSql(this.StmtNode.Text(),
 		this.visitor.SetSubClauseWhereCount, this.visitor.HasWhereClause)
 	if err != nil {

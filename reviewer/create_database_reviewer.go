@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type CreateDatabaseReviewer struct {
@@ -105,7 +104,7 @@ func (this *CreateDatabaseReviewer) DetectDBOptions() (haveError bool) {
 // 链接到实例检测相关信息
 func (this *CreateDatabaseReviewer) DetectInstanceDatabase() (haveError bool) {
 	var msg string
-	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo := NewTableInfo(this.DBConfig, "")
 	tableInfo.DBName = this.StmtNode.Name
 	err := tableInfo.OpenInstance()
 	if err != nil {

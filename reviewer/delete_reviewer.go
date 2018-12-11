@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type DeleteReviewer struct {
@@ -153,7 +152,7 @@ func (this *DeleteReviewer) DetectDeleteLimit() (haveError bool) {
 
 // 和原表结合进行检测
 func (this *DeleteReviewer) DetectFromInstance() (haveError bool) {
-	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo := NewTableInfo(this.DBConfig, "")
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg := fmt.Sprintf("警告: 无法链接到指定实例. 无法检测数据库是否存在. %v", err)
@@ -173,7 +172,7 @@ func (this *DeleteReviewer) DetectFromInstance() (haveError bool) {
 	return
 }
 
-func (this *DeleteReviewer) DetectDeleteRowCount(tableInfo *dao.TableInfo) (haveError bool) {
+func (this *DeleteReviewer) DetectDeleteRowCount(tableInfo *TableInfo) (haveError bool) {
 	explainSelectSql := GetExplainSelectSqlByDeleteSql(this.StmtNode.Text())
 
 	deleteRowCount, err := tableInfo.GetExplainMaxRows(explainSelectSql)

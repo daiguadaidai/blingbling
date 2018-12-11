@@ -114,6 +114,8 @@ type ReviewConfig struct {
 	RuleAllowInsertIgnore bool
 	// 是否允许 replace into
 	RuleAllowInsertReplace bool
+	// 索引字符长度
+	RuleIndexCharLength int
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -172,6 +174,7 @@ func NewReviewConfig() *ReviewConfig {
 	rc.RuleAllowInsertNoColumn = RULE_ALLOW_INSERT_NO_COLUMN
 	rc.RuleAllowInsertIgnore = RULE_ALLOW_INSERT_IGNORE
 	rc.RuleAllowInsertReplace = RULE_ALLOW_INSERT_REPLIACE
+	rc.RuleIndexCharLength = RULE_INDEX_CHAR_LENGTH
 
 	return rc
 }
@@ -179,7 +182,7 @@ func NewReviewConfig() *ReviewConfig {
 /* 设置全局的 reviewconfig
 Params:
 	_reviewConfig: sql审核配置
- */
+*/
 func SetReviewConfig(_reviewConfig *ReviewConfig) {
 	reviewConfig = _reviewConfig
 }

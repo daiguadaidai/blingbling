@@ -107,4 +107,6 @@ const (
 	RULE_ALLOW_INSERT_IGNORE = true
 	// 是否允许 replace into
 	RULE_ALLOW_INSERT_REPLIACE = true
+	// 索引字符长度
+	RULE_INDEX_CHAR_LENGTH = 767
 )

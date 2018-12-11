@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type DropTableReviewer struct {
@@ -60,11 +59,11 @@ func (this *DropTableReviewer) DetectInstanceTables() (haveError bool) {
 Params:
     _dbName: 数据库名
     _tableName: 原表名
- */
+*/
 func (this *DropTableReviewer) DetectInstanceTable(_dbName, _tableName string) (haveError bool) {
 	var msg string
 
-	tableInfo := dao.NewTableInfo(this.DBConfig, _tableName)
+	tableInfo := NewTableInfo(this.DBConfig, _tableName)
 	err := tableInfo.OpenInstance()
 	if err != nil {
 		msg = fmt.Sprintf("警告: 无法链接到指定实例. 无法删除表 %v. %v",

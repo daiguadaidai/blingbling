@@ -5,7 +5,6 @@ import (
 
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
-	"github.com/daiguadaidai/blingbling/dao"
 )
 
 type DropDatabaseReviewer struct {
@@ -42,7 +41,7 @@ func (this *DropDatabaseReviewer) Review() *ReviewMSG {
 func (this *DropDatabaseReviewer) DetectInstanceDatabase() (haveError bool) {
 	var msg string
 
-	tableInfo := dao.NewTableInfo(this.DBConfig, "")
+	tableInfo := NewTableInfo(this.DBConfig, "")
 	tableInfo.DBName = this.StmtNode.Name
 	err := tableInfo.OpenInstance()
 	if err != nil {

@@ -1,9 +1,10 @@
-package dao
+package reviewer
 
 import (
 	"fmt"
 	"github.com/daiguadaidai/blingbling/ast"
 	"github.com/daiguadaidai/blingbling/config"
+	"github.com/daiguadaidai/blingbling/dao"
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
 	"github.com/daiguadaidai/blingbling/parser"
 	"github.com/juju/errors"
@@ -13,34 +14,35 @@ import (
 type TableInfo struct {
 	DBName    string
 	TableName string
-	Instance  *Instance
+	Instance  *dao.Instance
 
 	Exists          bool
 	ExistsQueried   bool // 已经查询过了 表是否存在
 	DBExists        bool
 	DBExistsQueried bool // 已经查询过了 数据库是否存在
 
-	CreateTableSql   string
-	ColumnNameMap    map[string]bool
-	PKColumnNameMap  map[string]bool
-	PKColumnNameList []string
-	UniqueIndexes    map[string][]string
-	Indexes          map[string][]string
-	FullTextIndex    map[string][]string
-	PartitionNames   map[string]bool
-	ColumnTypeCount  map[byte]int // 保存字段类型出现的个数
+	CreateTableSql    string
+	ColumnNameMap     map[string]bool
+	PKColumnNameMap   map[string]bool
+	PKColumnNameList  []string
+	UniqueIndexes     map[string][]string
+	Indexes           map[string][]string
+	FullTextIndex     map[string][]string
+	PartitionNames    map[string]bool
+	ColumnTypeCount   map[byte]int   // 保存字段类型出现的个数
+	ColumnsCharLenMap map[string]int // 每个字段长度
 }
 
 /* 新建一个表信息
 Params:
     _instance: 实例
     _table: 表名
- */
+*/
 func NewTableInfo(_dbConfig *config.DBConfig, _table string) *TableInfo {
 	return &TableInfo{
 		DBName:    _dbConfig.Database,
 		TableName: _table,
-		Instance:  NewInstance(_dbConfig),
+		Instance:  dao.NewInstance(_dbConfig),
 	}
 }
 
@@ -57,7 +59,7 @@ func (this *TableInfo) CloseInstance() error {
 /* 检测数据库是否存在
 Params:
     _dbName: 数据库名
- */
+*/
 func (this *TableInfo) DatabaseExistsByName(_dbName string) (bool, error) {
 	if this.DBExistsQueried {
 		return this.DBExists, nil
@@ -84,7 +86,7 @@ func (this *TableInfo) DatabaseExistsByName(_dbName string) (bool, error) {
 Params:
     _dbName: 数据库名称
     _tableName: 表名称
- */
+*/
 func (this *TableInfo) TableExistsByName(_dbName, _tableName string) (bool, error) {
 	if _dbName == "" {
 		_dbName = this.Instance.DBconfig.Database
@@ -375,7 +377,7 @@ func (this *TableInfo) UniqueIndexCombinIndexes() {
 Params:
     _dbName: 数据库名称
     _tableName: 表名
- */
+*/
 func (this *TableInfo) InitCreateTableSql(_dbName, _tableName string) error {
 	if _dbName == "" {
 		_dbName = this.Instance.DBconfig.Database
@@ -475,21 +477,31 @@ func (this *TableInfo) ParseCreateTableInfo() error {
 /* 解析创建表
 Params:
     _createTableStmt: 创建表语句
- */
+*/
 func (this *TableInfo) ParseCreateTableColumns(_createTableStmt *ast.CreateTableStmt) {
 	if this.ColumnNameMap == nil {
 		this.ColumnNameMap = make(map[string]bool)
 	}
+	if this.ColumnsCharLenMap == nil {
+		this.ColumnsCharLenMap = make(map[string]int)
+	}
 
 	for _, column := range _createTableStmt.Cols {
 		this.ColumnNameMap[column.Name.String()] = true
+		// 获取字段类型长度
+		len, err := GetColumnDefineCharLen(column)
+		if err != nil {
+			this.ColumnsCharLenMap[column.Name.String()] = 0
+			continue
+		}
+		this.ColumnsCharLenMap[column.Name.String()] = len
 	}
 }
 
 /* 解析建表约束
 Params:
     _createTableStmt: 创建表语句
- */
+*/
 func (this *TableInfo) ParseCreateTableConstraint(_createTableStmt *ast.CreateTableStmt) {
 	if this.PKColumnNameList == nil {
 		this.PKColumnNameList = make([]string, 0, 1)
@@ -537,8 +549,8 @@ func (this *TableInfo) ParseCreateTableConstraint(_createTableStmt *ast.CreateTa
 }
 
 /* 解析建表语句的分区表
-    _createTableStmt: 创建表语句
- */
+   _createTableStmt: 创建表语句
+*/
 func (this *TableInfo) ParseCreateTablePartition(_createTableStmt *ast.CreateTableStmt) {
 	if this.PartitionNames == nil {
 		this.PartitionNames = make(map[string]bool)
@@ -554,15 +566,15 @@ func (this *TableInfo) ParseCreateTablePartition(_createTableStmt *ast.CreateTab
 /* 解析键表语句的表字段个数
 Params:
     _createTableStmt: 建表语句
- */
+*/
 func (this *TableInfo) ParseCreateTableColumnTableCount(_createTableStmt *ast.CreateTableStmt) {
 	for _, column := range _createTableStmt.Cols {
 		switch column.Tp.Tp {
 		case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob:
 			// 4种大字段都设置为是 Blob
-			this.ColumnTypeCount[mysql.TypeBlob] ++
+			this.ColumnTypeCount[mysql.TypeBlob]++
 		default:
-			this.ColumnTypeCount[column.Tp.Tp] ++
+			this.ColumnTypeCount[column.Tp.Tp]++
 		}
 	}
 }

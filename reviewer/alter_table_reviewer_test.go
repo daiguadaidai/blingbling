@@ -167,11 +167,11 @@ add (
 			case ast.AlterTableDropPrimaryKey:
 				fmt.Printf("--- %v: AlterTableDropPrimaryKey ---: name: %v, comment: %v\n",
 					i, spec.Name, spec.Comment)
-				fmt.Println("    ----:", )
+				fmt.Println("    ----:")
 			case ast.AlterTableDropIndex:
 				fmt.Printf("--- %v: AlterTableDropIndex ---: name: %v, comment: %v\n",
 					i, spec.Name, spec.Comment)
-				fmt.Println("    ----:", )
+				fmt.Println("    ----:")
 			case ast.AlterTableDropForeignKey:
 				fmt.Printf("--- %v: AlterTableDropForeignKey ---: name: %v, comment: %v\n",
 					i, spec.Name, spec.Comment)
@@ -343,6 +343,70 @@ alter table app_oms_prom_goods_flow_4h_hr_partition
 		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
 		reviewMSG := review.Review()
 		reviewMSG.ResetHaveErrorAndWarning()
+		fmt.Println(reviewMSG.String())
+	}
+
+}
+
+func TestAlterTableReviewer_Review_IndexCharLenNoInstance(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle"
+	var database string = "employees"
+	sql := `
+ALTER TABLE emp
+    ADD COLUMN a varchar(10) not null default '' comment 'a',
+    ADD COLUMN b varchar(10) not null default '' comment 'b',
+    ADD COLUMN c varchar(767) not null default '' comment 'c',
+	ADD INDEX idx_bcd(b, c, d)
+    `
+	fmt.Sprintf("%v", sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig).(*AlterTableReviewer)
+		reviewMSG := review.Review()
+		fmt.Println(reviewMSG.String())
+	}
+
+}
+
+func TestAlterTableReviewer_Review_IndexCharLen(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+	sql := `
+ALTER TABLE emp
+    ADD COLUMN a varchar(10) not null default '' comment 'a',
+    ADD COLUMN b varchar(10) not null default '' comment 'b',
+    ADD COLUMN c varchar(767) not null default '' comment 'c',
+	ADD INDEX idx_c_last_ame(c, last_name)
+    `
+	fmt.Sprintf("%v", sql)
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig).(*AlterTableReviewer)
+		reviewMSG := review.Review()
 		fmt.Println(reviewMSG.String())
 	}
 

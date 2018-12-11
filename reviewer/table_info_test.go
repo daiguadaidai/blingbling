@@ -1,11 +1,10 @@
-package dao
+package reviewer
 
 import (
-	"testing"
 	"fmt"
 	"github.com/daiguadaidai/blingbling/config"
+	"testing"
 )
-
 
 func TestTableInfo_DatabaseExists(t *testing.T) {
 	host := "10.10.10.12"
@@ -22,7 +21,7 @@ func TestTableInfo_DatabaseExists(t *testing.T) {
 		t.Fatalf("打开数据库出错: %v", err)
 	}
 
-	exist, err := tableInfo.DatabaseExists()
+	exist, err := tableInfo.DatabaseExistsByName(database)
 	if err != nil {
 		t.Fatalf("执行数据库是否存在报错: %v", err)
 	}
@@ -48,7 +47,7 @@ func TestTableInfo_TableExists(t *testing.T) {
 		t.Fatalf("打开数据库出错: %v", err)
 	}
 
-	exist, err := tableInfo.TableExists()
+	exist, err := tableInfo.TableExistsByName(database, table)
 	if err != nil {
 		t.Fatalf("执行表是否存在报错: %v", err)
 	}
@@ -160,7 +159,6 @@ func TestTableInfo_FindNormalIndexes(t *testing.T) {
 	fmt.Println("普通索引:", indexes)
 	fmt.Println("主键:", tableInfo.PKColumnNameList)
 	fmt.Println("唯一索引:", tableInfo.UniqueIndexes)
-
 
 	if err := tableInfo.CloseInstance(); err != nil {
 		t.Fatalf("关闭数据库出错: %v", err)

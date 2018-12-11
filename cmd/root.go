@@ -218,4 +218,6 @@ func init() {
 	rootCmd.Flags().BoolVar(&runConfig.RuleAllowInsertReplace, "rule-allow-insert-replace",
 		config.RULE_ALLOW_INSERT_REPLIACE,
 		fmt.Sprintf("是否允许 INSERT REPLACE 语句. 默认: %v", config.RULE_ALLOW_INSERT_REPLIACE))
+	rootCmd.Flags().IntVar(&runConfig.RuleIndexCharLength, "rule-index-char-length",
+		config.RULE_INDEX_CHAR_LENGTH, "索引字符允许的长度")
 }

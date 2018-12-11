@@ -118,6 +118,8 @@ type RequestReviewParam struct {
 	CustomRuleAllowInsertIgnore bool
 	// 是否使用自定义, 是否允许 replace boolo
 	CustomRuleAllowInsertReplace bool
+	// 索引允许长度
+	CustomRuleIndexCharLength bool
 }
 
 func (this *RequestReviewParam) GetReviewConfig() *config.ReviewConfig {
@@ -335,6 +337,10 @@ func (this *RequestReviewParam) GetReviewConfig() *config.ReviewConfig {
 	if this.CustomRuleAllowInsertReplace {
 		reviewConfig.RuleAllowInsertReplace = this.ReviewConfig.RuleAllowInsertReplace
 	}
+	// 是否使用自定义, 索引长度
+	if this.CustomRuleIndexCharLength {
+		reviewConfig.RuleIndexCharLength = this.ReviewConfig.RuleIndexCharLength
+	}
 
 	return reviewConfig
 }
@@ -351,7 +357,7 @@ func (this *RequestReviewParam) GetDBConfig() *config.DBConfig {
 }
 
 func (this *RequestReviewParam) ClientParams() string {
-    return `
+	return `
     可选参数                           参数类型         干什么用的
     ------------------------ 需要审核的数据库相关参数 --------------------------
     Username                           string          数据库用户名
@@ -417,6 +423,7 @@ func (this *RequestReviewParam) ClientParams() string {
     RuleAllowInsertNoColumn            bool            是否允许不指定字段
     RuleAllowInsertIgnore              bool            是否允许 insert ignore
     RuleAllowInsertReplace             bool            是否允许 replace into
+    RuleIndexCharLength                int             索引允许的长度. 默认:767
 
     ------------------------- 是否自定义, 自定义审核规则参数 -------------------------------
     CustomRuleNameLength               bool            是否自定义, 通用名字长度
@@ -472,5 +479,6 @@ func (this *RequestReviewParam) ClientParams() string {
     CustomRuleAllowInsertNoColumn      bool            是否自定义, 是否允许不指定字段
     CustomRuleAllowInsertIgnore        bool            是否自定义, 是否允许 insert ignore
     CustomRuleAllowInsertReplace       bool            是否自定义, 是否允许 replace boolo
+    CustomRuleIndexCharLength          bool            是否自定义, 索引长度
 `
 }
