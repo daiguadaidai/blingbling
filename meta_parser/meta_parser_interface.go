@@ -12,6 +12,10 @@ func NewMetaParser(stmtNode ast.Node) MetaParser {
 		return &CreateTableMetaParser{StmtNode: stmt}
 	case *ast.AlterTableStmt:
 		return &AlterTableMetaParser{StmtNode: stmt}
+	case *ast.DropTableStmt:
+		return &DropTableMetaParser{StmtNode: stmt}
+	case *ast.TruncateTableStmt:
+		return &TruncateTableMetaParser{StmtNode: stmt}
 	}
 
 	return nil

@@ -1,8 +1,10 @@
 package meta_parser
 
 const (
-	META_INFO_TYPE_CREATE_TABLE = "ct"
-	META_INFO_TYPE_ALTER_TABLE  = "at"
+	META_INFO_TYPE_CREATE_TABLE   = "ct"
+	META_INFO_TYPE_ALTER_TABLE    = "at"
+	META_INFO_TYPE_DROP_TABLE     = "dt"
+	META_INFO_TYPE_TRUNCATE_TABLE = "tt"
 )
 
 type MetaData interface {
@@ -227,3 +229,24 @@ func NewMetaAlterTable() *MetaAlterTable {
 		OPS: make([]MetaData, 0, 1),
 	}
 }
+
+// drop table 元数据
+type MetaDropTable struct {
+	Schema   string `json:"schema"`
+	Table    string `json:"table"`
+	IfExists bool   `json:"if_exists"`
+}
+
+func (this *MetaDropTable) MetaDataInterfaceFunc() {}
+
+type MetaDropTables []*MetaDropTable
+
+func (this MetaDropTables) MetaDataInterfaceFunc() {}
+
+// truncate table 元数据
+type MetaTruncateTable struct {
+	Schema string `json:"schema"`
+	Table  string `json:"table"`
+}
+
+func (this *MetaTruncateTable) MetaDataInterfaceFunc() {}
