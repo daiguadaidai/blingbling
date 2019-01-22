@@ -763,3 +763,46 @@ CREATE TABLE test.t1 (
 		}
 	}
 }
+
+func TestCreateTableReviewer_Review_Text(t *testing.T) {
+	sql := `
+CREATE TABLE test.t1 (
+  id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  dep varchar(3) NOT NULL DEFAULT '' Comment '注释',
+  arr varchar(3) NOT NULL DEFAULT '' Comment '注释',
+  flightNo varchar(10) NOT NULL DEFAULT '' Comment '注释',
+  flightDate date NOT NULL DEFAULT '1000-10-10' Comment '注释',
+  flightTime varchar(767) NOT NULL DEFAULT '' Comment '注释',
+  isCodeShare tinyint(1) Comment '注释',
+  tax int(11) NOT NULL DEFAULT '0' Comment '注释',
+  yq int(11) NOT NULL DEFAULT '0' Comment '注释',
+  decimal_1 DECIMAL(12, 4) NOT NULL DEFAULT '0' Comment '注释',
+  cabin char(2) NOT NULL default '' Comment '注释',
+  ibe_price int(11) NOT NULL DEFAULT '0' Comment '注释',
+  ctrip_price int(11) NOT NULL DEFAULT '0' Comment '注释',
+  official_price int(11) NOT NULL DEFAULT '0' Comment '注释',
+  uptime datetime NOT NULL DEFAULT '1000-10-10 10:10:10' Comment '注释',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_uid (dep, arr, flightNo, flightDate, cabin),
+  UNIQUE KEY uk_uid2 (dep, arr, flightNo, flightDate, flightTime),
+  Index idx_uptime (uptime),
+  -- KEY idx_flight (dep,arr),
+  KEY idx_flightdate (flightDate),
+  KEY idx_flighttime (flightTime)
+) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
+    `
+
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+	for _, stmtNode := range stmtNodes {
+		createTableStmt := stmtNode.(*ast.CreateTableStmt)
+		for _, col := range createTableStmt.Cols {
+			col.SetText("asdfasdf")
+			fmt.Println(col.Text())
+		}
+
+	}
+}

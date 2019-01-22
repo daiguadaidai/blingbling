@@ -136,7 +136,7 @@ func GetMetaInfo(param *MetaSqls) ([]*meta_parser.MetaInfo, error) {
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(param.Sqls, "", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("语法错误: %s", err.Error())
 	}
 
 	for _, stmtNode := range stmtNodes {
@@ -147,7 +147,7 @@ func GetMetaInfo(param *MetaSqls) ([]*meta_parser.MetaInfo, error) {
 
 		mi, err := metaParser.MetaParse()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("解析/获取元数据出错. %s", err.Error())
 		}
 		mis = append(mis, mi)
 	}
