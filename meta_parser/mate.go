@@ -95,7 +95,7 @@ func NewMetaAddColumn() *MetaAddColumn {
 }
 
 type MetaDropColumn struct {
-	Type       string `json:type`
+	Type       string `json:"type"`
 	ColumnName string `json:"column_name"`
 }
 
