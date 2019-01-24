@@ -18,7 +18,8 @@ type TruncateTableReviewer struct {
 }
 
 func (this *TruncateTableReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeTruncateTable,
+		this.StmtNode.Table.Schema.String(), this.StmtNode.Table.Name.String())
 
 	if this.StmtNode.Table.Schema.String() != "" {
 		this.SchemaName = this.StmtNode.Table.Schema.String()

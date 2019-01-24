@@ -16,7 +16,7 @@ type RenameTableReviewer struct {
 }
 
 func (this *RenameTableReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeRenameTable, "", "")
 }
 
 func (this *RenameTableReviewer) Review() *ReviewMSG {

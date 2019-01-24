@@ -17,7 +17,7 @@ type DeleteReviewer struct {
 }
 
 func (this *DeleteReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeDelete, "", "")
 
 	this.Visitor = NewDeleteVisitor()
 }

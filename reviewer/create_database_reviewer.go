@@ -16,7 +16,7 @@ type CreateDatabaseReviewer struct {
 }
 
 func (this *CreateDatabaseReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeCreateDatabase, this.StmtNode.Name, "")
 }
 
 func (this *CreateDatabaseReviewer) Review() *ReviewMSG {

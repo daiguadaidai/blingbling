@@ -140,3 +140,50 @@ func GetTextSqlTypeByByte(_sqlType byte) string {
 
 	return sqlTypeText
 }
+
+type StmtType int
+
+const (
+	StmtTypeNone           StmtType = 0
+	StmtTypeCreateDatabase StmtType = 1
+	StmtTypeDropDatabase   StmtType = 2
+	StmtTypeCreateTable    StmtType = 3
+	StmtTypeDropTable      StmtType = 4
+	StmtTypeRenameTable    StmtType = 5
+	StmtTypeCreateView     StmtType = 6
+	StmtTypeCreateIndex    StmtType = 7
+	StmtTypeDropIndex      StmtType = 8
+	StmtTypeAlterTable     StmtType = 9
+	StmtTypeTruncateTable  StmtType = 10
+	StmtTypeSelect         StmtType = 11
+	StmtTypeUnion          StmtType = 12
+	StmtTypeLoadData       StmtType = 13
+	StmtTypeInsert         StmtType = 14
+	StmtTypeDelete         StmtType = 15
+	StmtTypeUpdate         StmtType = 16
+	StmtTypeShow           StmtType = 17
+	StmtTypeTrace          StmtType = 18
+	StmtTypeExplain        StmtType = 19
+	StmtTypePrepare        StmtType = 20
+	StmtTypeDeallocate     StmtType = 21
+	StmtTypeExecute        StmtType = 22
+	StmtTypeBegin          StmtType = 23
+	StmtTypeBinlog         StmtType = 24
+	StmtTypeCommit         StmtType = 25
+	StmtTypeRollback       StmtType = 26
+	StmtTypeUse            StmtType = 27
+	StmtTypeFlush          StmtType = 28
+	StmtTypeKill           StmtType = 29
+	StmtTypeSet            StmtType = 30
+	StmtTypeSetPwd         StmtType = 31
+	StmtTypeCreateUser     StmtType = 32
+	StmtTypeAlterUser      StmtType = 33
+	StmtTypeDropUser       StmtType = 34
+	StmtTypeDo             StmtType = 35
+	StmtTypeAdmin          StmtType = 36
+	StmtTypeRevoke         StmtType = 37
+	StmtTypeGrant          StmtType = 38
+	StmtTypeAnalyzeTable   StmtType = 39
+	StmtTypeDropStats      StmtType = 40
+	StmtTypeLoadStats      StmtType = 41
+)

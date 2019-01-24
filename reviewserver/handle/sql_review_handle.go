@@ -3,6 +3,7 @@ package handle
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/config"
 	"github.com/daiguadaidai/blingbling/parser"
 	"github.com/daiguadaidai/blingbling/reviewer"
 	"github.com/gorilla/schema"
@@ -23,7 +24,7 @@ func SqlReviewHandle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		reviewMSGs := make([]*reviewer.ReviewMSG, 0, 1)
 
-		reviewMSG := reviewer.NewReivewMSG()
+		reviewMSG := reviewer.NewReivewMSG(config.StmtTypeNone, "", "")
 		reviewMSG.HaveError = true
 		reviewMSG.AppendMSG(reviewMSG.HaveError, fmt.Sprintf("%v", err))
 
@@ -115,7 +116,7 @@ func StartReview(_requestParam *RequestReviewParam) []*reviewer.ReviewMSG {
 	sqlParser := parser.New()
 	stmtNodes, err := sqlParser.Parse(_requestParam.Sqls, "", "")
 	if err != nil {
-		reviewMSG := reviewer.NewReivewMSG()
+		reviewMSG := reviewer.NewReivewMSG(config.StmtTypeNone, "", "")
 		reviewMSG.HaveError = true
 		reviewMSG.Sql = _requestParam.Sqls
 		reviewMSG.AppendMSG(reviewMSG.HaveError, fmt.Sprintf("sql语法错误: %v", err))
@@ -128,7 +129,7 @@ func StartReview(_requestParam *RequestReviewParam) []*reviewer.ReviewMSG {
 	for _, stmtNode := range stmtNodes {
 		review := reviewer.NewReviewer(stmtNode, reviewConfig, dbConfig)
 		if review == nil {
-			reviewMSG := reviewer.NewReivewMSG()
+			reviewMSG := reviewer.NewReivewMSG(config.StmtTypeNone, "", "")
 			reviewMSG.HaveError = true
 			reviewMSG.Sql = stmtNode.Text()
 			reviewMSG.AppendMSG(true, "无法匹配到相关SQL语句类型")
@@ -142,5 +143,48 @@ func StartReview(_requestParam *RequestReviewParam) []*reviewer.ReviewMSG {
 		reviewMSGs = append(reviewMSGs, reviewMSG)
 	}
 
+	mergeMSG := checkSqlMerge(reviewMSGs)
+	if mergeMSG != nil {
+		reviewMSGs = append(reviewMSGs, mergeMSG)
+	}
+
 	return reviewMSGs
+}
+
+func checkSqlMerge(msgs []*reviewer.ReviewMSG) *reviewer.ReviewMSG {
+	// sql语句类型Map
+	typeMap := make(map[config.StmtType]map[string]int)
+	for _, msg := range msgs {
+		if _, ok := typeMap[msg.SqlType]; !ok {
+			tableMap := make(map[string]int)
+			typeMap[msg.SqlType] = tableMap
+		}
+		typeMap[msg.SqlType][msg.SchemeTable()]++
+	}
+
+	rmsg := reviewer.NewReivewMSG(config.StmtTypeNone, "", "")
+	for stmtType, tableMap := range typeMap {
+		for tableName, count := range tableMap {
+			if count > 1 {
+				switch stmtType {
+				case config.StmtTypeAlterTable:
+					rmsg.HaveWarning = true
+					msg := fmt.Sprintf("发现 %d 条 ALTER TABLE %s 语句, "+
+						"对于同一个表的 ALTER 操作, 可以进行合并成一条, 这样能让SQL执行数度层被增加."+
+						"如: ALTER TABLE %s ADD xxx, ADD xxx, DROP xxx ...", count, tableName, tableName)
+					rmsg.AppendMSG(true, msg)
+				case config.StmtTypeInsert:
+					rmsg.HaveWarning = true
+					msg := fmt.Sprintf("发现 %d 条 INSERT INTO %s 语句, "+
+						"将对相同表进行INSERT, 可以合并成一条批量执行语句. 这样执行速度更快."+
+						"如: INSERT INTO %s VALUES(),(),() ...", count, tableName, tableName)
+					rmsg.AppendMSG(true, msg)
+				}
+			}
+		}
+	}
+	if rmsg.HaveWarning {
+		return rmsg
+	}
+	return nil
 }

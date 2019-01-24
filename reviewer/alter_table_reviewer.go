@@ -43,7 +43,8 @@ type AlterTableReviewer struct {
 }
 
 func (this *AlterTableReviewer) Init() {
-	this.ReViewMSG = NewReivewMSG()
+	this.ReViewMSG = NewReivewMSG(config.StmtTypeAlterTable,
+		this.StmtNode.Table.Schema.String(), this.StmtNode.Table.Name.String())
 
 	this.AddColumns = make(map[string]bool)
 	this.DropColumns = make(map[string]bool)

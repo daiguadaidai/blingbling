@@ -3,6 +3,7 @@ package reviewer
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/daiguadaidai/blingbling/config"
 	"strings"
 )
 
@@ -54,16 +55,22 @@ func (this *ResponseReviewData) ResetCode() {
 
 type ReviewMSG struct {
 	Sql         string
+	SqlType     config.StmtType
+	Schema      string
+	Table       string
 	HaveError   bool
 	HaveWarning bool
 	ErrorMSGs   []string
 	WarningMSGs []string
 }
 
-func NewReivewMSG() *ReviewMSG {
+func NewReivewMSG(typ config.StmtType, schema string, table string) *ReviewMSG {
 	return &ReviewMSG{
 		ErrorMSGs:   make([]string, 0, 1),
 		WarningMSGs: make([]string, 0, 1),
+		SqlType:     typ,
+		Schema:      schema,
+		Table:       table,
 	}
 }
 
@@ -81,7 +88,7 @@ func (this *ReviewMSG) ResetHaveErrorAndWarning() {
 Params:
     _haveError: 是否有错误
     _msg: 相关信息
- */
+*/
 func (this *ReviewMSG) AppendMSG(_haveError bool, _msg string) (haveMSG bool) {
 	if _haveError {
 		this.ErrorMSGs = append(this.ErrorMSGs, _msg)
@@ -102,4 +109,14 @@ func (this *ReviewMSG) String() string {
 	}
 
 	return string(jsonBytes)
+}
+
+func (this *ReviewMSG) SchemeTable() string {
+	if len(this.Schema) > 0 && len(this.Table) > 0 {
+		return fmt.Sprintf("%s.%s", this.Schema, this.Table)
+	} else if len(this.Table) > 0 {
+		return this.Table
+	}
+
+	return ""
 }

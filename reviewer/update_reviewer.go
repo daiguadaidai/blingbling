@@ -17,7 +17,7 @@ type UpdateReviewer struct {
 }
 
 func (this *UpdateReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeUpdate, "", "")
 
 	this.visitor = NewUpdateVisitor()
 }

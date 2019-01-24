@@ -41,7 +41,8 @@ type CreateTableReviewer struct {
 
 // 初始化一些变量
 func (this *CreateTableReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeCreateTable,
+		this.StmtNode.Table.Schema.String(), this.StmtNode.Table.Name.String())
 
 	this.ColumnNames = make(map[string]bool)
 	this.PKColumnNames = make(map[string]bool)

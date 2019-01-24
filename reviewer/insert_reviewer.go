@@ -18,7 +18,9 @@ type InsertReviewer struct {
 }
 
 func (this *InsertReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	table := this.StmtNode.Table.TableRefs.Left.(*ast.TableSource).Source.(*ast.TableName)
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeInsert, table.Schema.String(),
+		table.Name.String())
 
 	tableName := this.StmtNode.Table.TableRefs.Left.(*ast.TableSource).Source.(*ast.TableName)
 	this.SchemaName = tableName.Schema.String()

@@ -16,7 +16,7 @@ type DropTableReviewer struct {
 }
 
 func (this *DropTableReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeDropTable, "", "")
 }
 
 func (this *DropTableReviewer) Review() *ReviewMSG {

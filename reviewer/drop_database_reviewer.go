@@ -16,7 +16,7 @@ type DropDatabaseReviewer struct {
 }
 
 func (this *DropDatabaseReviewer) Init() {
-	this.ReviewMSG = NewReivewMSG()
+	this.ReviewMSG = NewReivewMSG(config.StmtTypeDropDatabase, this.StmtNode.Name, "")
 }
 
 func (this *DropDatabaseReviewer) Review() *ReviewMSG {
