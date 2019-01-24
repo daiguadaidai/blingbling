@@ -31,6 +31,7 @@ type TableInfo struct {
 	PartitionNames    map[string]bool
 	ColumnTypeCount   map[byte]int   // 保存字段类型出现的个数
 	ColumnsCharLenMap map[string]int // 每个字段长度
+	AutoIncrementName string         // 自增字段名称
 }
 
 /* 新建一个表信息
@@ -488,6 +489,7 @@ func (this *TableInfo) ParseCreateTableColumns(_createTableStmt *ast.CreateTable
 
 	for _, column := range _createTableStmt.Cols {
 		this.ColumnNameMap[column.Name.String()] = true
+		this.ParseCreateTableColumnOption(column) // 解析字段 option 操作
 		// 获取字段类型长度
 		len, err := GetColumnDefineCharLen(column)
 		if err != nil {
@@ -575,6 +577,16 @@ func (this *TableInfo) ParseCreateTableColumnTableCount(_createTableStmt *ast.Cr
 			this.ColumnTypeCount[mysql.TypeBlob]++
 		default:
 			this.ColumnTypeCount[column.Tp.Tp]++
+		}
+	}
+}
+
+// 解析建表字段操作
+func (this *TableInfo) ParseCreateTableColumnOption(col *ast.ColumnDef) {
+	for _, op := range col.Options {
+		switch op.Tp {
+		case ast.ColumnOptionAutoIncrement:
+			this.AutoIncrementName = col.Name.String()
 		}
 	}
 }

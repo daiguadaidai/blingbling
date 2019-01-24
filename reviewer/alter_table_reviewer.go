@@ -982,7 +982,7 @@ Params:
 */
 func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *TableInfo) (haveError bool) {
 	// 检测主键相关
-	if len(this.PKColumnNames) > 0 {
+	if len(this.PKColumnNames) > 0 { // 本次 alter 语句有 add primary key
 		// 检测主键是否有重复定义, 并且该alter语句没有删除主键语句
 		if len(_tableInfo.PKColumnNameList) > 0 && !this.IsDropPrimaryKey {
 			msg := fmt.Sprintf("检测失败. 表: %v. 主键已经存在.",
@@ -993,12 +993,20 @@ func (this *AlterTableReviewer) DetectInstancePKInfo(_tableInfo *TableInfo) (hav
 		}
 
 		// 主键是否有autoincrement
-		if _, ok := this.PKColumnNames[this.AutoIncrementName]; !ok {
-			msg := fmt.Sprintf("检测失败. 表: %v. 主键必须有自增列.",
-				this.StmtNode.Table.Name.String())
-			haveError = true
-			this.ReViewMSG.AppendMSG(haveError, msg)
-			return
+		if this.ReviewConfig.RulePKAutoIncrement {
+			var autoIncrementName string
+			if len(this.AutoIncrementName) != 0 {
+				autoIncrementName = this.AutoIncrementName
+			} else if len(_tableInfo.AutoIncrementName) != 0 {
+				autoIncrementName = _tableInfo.AutoIncrementName
+			}
+			if _, ok := this.PKColumnNames[autoIncrementName]; !ok {
+				msg := fmt.Sprintf("检测失败. 表: %v. 主键必须有自增列.",
+					this.StmtNode.Table.Name.String())
+				haveError = true
+				this.ReViewMSG.AppendMSG(haveError, msg)
+				return
+			}
 		}
 	}
 
