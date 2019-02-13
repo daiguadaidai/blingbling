@@ -908,6 +908,12 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 		return
 	}
 
+	// 检测添加的索引是否已经存在
+	haveError = this.DetectIndexExists(tableInfo)
+	if haveError {
+		return
+	}
+
 	// 检测after 子句的字段是否存在
 	haveError = this.DetectAfterColumnExists(tableInfo)
 	if haveError {
@@ -1305,5 +1311,24 @@ func (this *AlterTableReviewer) DetectIndexCharLength(maps ...map[string]int) (h
 			return
 		}
 	}
+	return
+}
+
+/* 检测索引是否已经存在
+Params:
+    _tableInfo: 原表信息
+*/
+func (this *AlterTableReviewer) DetectIndexExists(_tableInfo *TableInfo) (haveError bool) {
+	for name, _ := range this.AddIndexes { // 剔除rename索引操作加入的索引
+		if _, ok := _tableInfo.Indexes[name]; ok { // 源表中已经有该索引名称
+			if _, dropOK := this.DropIndexes[name]; !dropOK { // 判断该索引名称是否是否有被删除
+				haveError = true
+				msg := fmt.Sprintf("索引 %s 已经存在. 不允许添加", name)
+				this.ReViewMSG.AppendMSG(haveError, msg)
+				return
+			}
+		}
+	}
+
 	return
 }
