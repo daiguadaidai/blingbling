@@ -369,13 +369,45 @@ func (this *CreateTableReviewer) DetectColumns() (haveError bool) {
 		this.SetReviewPkInfo(column)
 
 		// 6. 获取字段定义长度
-		len, err := GetColumnDefineCharLen(column)
+		charLen, err := GetColumnDefineCharLen(column)
 		if err != nil {
 			haveError = true
 			this.ReviewMSG.AppendMSG(haveError, err.Error())
 			return
 		}
-		this.ColumnsCharLenMap[column.Name.String()] = len
+		this.ColumnsCharLenMap[column.Name.String()] = charLen
+
+		// 7. 检测字段定义的 Charset
+		if this.ReviewConfig.RuleAllowColumnCharset { // 允许collate
+			haveError, msg = DetectCharset(column.Tp.Charset, this.ReviewConfig.RuleCollate)
+			if haveError {
+				this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s . %s", column.Name.String(), msg))
+				return
+			}
+		} else { // 不允许charset
+			if len(column.Tp.Charset) > 0 {
+				haveError = true
+				this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf(config.MSG_ALLOW_COLUMN_CHARSET,
+					column.Name.String()))
+				return
+			}
+		}
+
+		// 8. 检测字段定义 Collect
+		if this.ReviewConfig.RuleAllowColumnCollate { // 允许字段使用charset
+			haveError, msg = DetectCollate(column.Tp.Charset, this.ReviewConfig.RuleCollate)
+			if haveError {
+				this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s . %s", column.Name.String(), msg))
+				return
+			}
+		} else { // 不允许字段使用collate
+			if len(column.Tp.Collate) > 0 {
+				haveError = true
+				this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf(config.MSG_ALLOW_COLUMN_COLLATE,
+					column.Name.String()))
+				return
+			}
+		}
 	}
 
 	return
@@ -737,6 +769,14 @@ func (this *CreateTableReviewer) DetectColumnOptions() (haveError bool) {
 				this.ReviewMSG.AppendMSG(haveError, msg)
 				return
 			}
+		}
+
+		// 9. 检测 blob 类型不能有默认值
+		if IsBlob(column.Tp.Tp) && hasDefaultValue {
+			haveError = true
+			this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s. Text/Blob/JSON/GEO类型 不能有默认值",
+				column.Name.String()))
+			return
 		}
 	}
 

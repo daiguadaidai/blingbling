@@ -54,6 +54,10 @@ Params:
     _allowCharsetStr: 允许的字符集 字符串 "utf8,gbk,utf8mb4"
 */
 func DetectCharset(_charset string, _allowCharsetStr string) (haveError bool, msg string) {
+	if len(_charset) == 0 || len(_allowCharsetStr) == 0 {
+		return
+	}
+
 	allowCharsets := strings.Split(_allowCharsetStr, ",") // 获取允许的字符集数组
 	isMatch := false
 	// 将需要检测的字符集 和 允许的字符集进行循环比较
@@ -81,6 +85,10 @@ Params:
     _allowCollateStr: 允许的 collate 字符串 "utf8_general_ci,utf8mb4_general_ci"
 */
 func DetectCollate(_collate string, _allowCollateStr string) (haveError bool, msg string) {
+	if len(_collate) == 0 || len(_allowCollateStr) == 0 {
+		return
+	}
+
 	allowCollates := strings.Split(_allowCollateStr, ",") // 获取允许的Collate数组
 	isMatch := false
 	// 将需要检测的collate 和 允许的字符集进行循环比较
@@ -448,4 +456,15 @@ func GetColumnsCharLen(nameLenMap map[string]int, names ...string) int {
 	}
 
 	return total
+}
+
+// 是否是Blob类型, text/blob/longblob ...
+func IsBlob(sqlType byte) bool {
+	switch sqlType {
+	case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob,
+		mysql.TypeJSON, mysql.TypeGeometry:
+		return true
+	}
+
+	return false
 }

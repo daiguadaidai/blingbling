@@ -81,6 +81,8 @@ ll
     一款SQL审核工具, 主要用于MySQL SQL 相关审核. 启动工具后会提供一个http接口为用户实时链接并且审核相关SQL.
     启动工具:
     ./blingbling \
+        --listen-host=0.0.0.0 \
+        --listen-port=19527 \
         --rule-name-length=100 \
         --rule-name-reg="^[a-zA-Z\$_][a-zA-Z\$\d_]*$" \
         --rule-charset="utf8,utf8mb4" \
@@ -101,6 +103,8 @@ Flags:
       --rule-all-column-not-null              是否所有字段. 默认: false
       --rule-allow-after-clause               是否允许after子句. 默认: true (default true)
       --rule-allow-change-column              是否允许Alter Change子句. 默认: true (default true)
+      --rule-allow-column-charset             是否允许字段使用 CHARSET. 默认: false
+      --rule-allow-column-collate             是否允许字段使用 COLLATE. 默认: false
       --rule-allow-delete-has-join            是否允许DELETE语句中使用JOIN. 默认: false
       --rule-allow-delete-has-sub-clause      是否允许DELETE语句中使用子查询. 默认: false
       --rule-allow-delete-limit               是否允许DELETE语句使用LIMIT. 默认: false
@@ -126,9 +130,10 @@ Flags:
       --rule-allow-update-limit               是否允许UPDATE语句使用LIMIT. 默认: false
       --rule-allow-update-no-where            是否允许UPDATE没有WHERE条件. 默认: false
       --rule-charset string                   通用允许的字符集, 默认(多个用逗号隔开) (default "utf8,utf8mb4")
-      --rule-collate string                   通用允许的collate, 默认(多个用逗号隔开) (default "utf8_general_ci,utf8mb4_general_ci")
+      --rule-collate string                   通用允许的collate, 默认(多个用逗号隔开) (default "utf8_general_ci,utf8_unicode_ci,utf8mb4_general_ci,utf8mb4_unicode_ci")
       --rule-delete-less-than int             允许一次性删除多少行数据. 使用explain计算出来 (default 10000)
       --rule-have-column-name string          必须要的字段, 默认(多个用逗号隔开)
+      --rule-index-char-length int            索引字符允许的长度 (default 767)
       --rule-index-column-count int           索引允许字段个数 (default 5)
       --rule-index-count int                  表允许有几个索引 (default 15)
       --rule-index-name-reg string            索引名命名规范(正则) (default "^idx_[a-z\\$\\d_]*$")
@@ -143,12 +148,12 @@ Flags:
       --rule-need-table-comment               表是否需要注释 默认: true (default true)
       --rule-not-allow-column-type string     不允许的字段类型, 至此的类型: decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, longblob, blob, tinytext, mediumtext, longtext, text, geometry (default "tinytext,mediumtext,logtext,tinyblob,mediumblob,longblob")
       --rule-not-null-column-name string      必须为not null 的索引名, 默认(多个用逗号隔开) (default "created_at,updated_at,create_time,update_time,create_at,update_at,created_time,updated_time")
-      --rule-not-null-column-type string      必须为not null的字段类型, 默认(多个用逗号隔开). 可填写的类型有: decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, longblob, blob, tinytext, mediumtext, longtext, text, geometry (default "varchar")
+      --rule-not-null-column-type string      必须为not null的字段类型, 默认(多个用逗号隔开). 可填写的类型有: decimal, tinyint, smallint, int, float, double, timestamp, bigint, mediumint, date, time, datetime, year, newdate, varchar, bit, json, newdecimal, enum, set, tinyblob, mediumblob, longblob, blob, tinytext, mediumtext, longtext, text, geometry
       --rule-pk-auto-increment                主键字段中是否需要有自增字段 默认: true (default true)
       --rule-table-engine string              允许的存储引擎 默认(多个用逗号隔开) (default "innodb")
-      --rule-table-name-reg string            表名, 名命名规范(正则) (default "(?i)^(?!taishan)[a-z\\$_][a-z\\$\\d_]*$")
+      --rule-table-name-reg string            表名, 名命名规范(正则) (default "(?i)^[a-z\\$_][a-z\\$\\d_]*$")
       --rule-text-type-column-count int       允许使用text/blob字段个数. 如果在rule-not-allow-column-type相关text字段.该参数将不其作用 (default 2)
-      --rule-unique-index-name-reg string     唯一索引名命名规范(正则) (default "^udx_[a-z\\$\\d_]*$")
+      --rule-unique-index-name-reg string     唯一索引名命名规范(正则) (default "^uk_[a-z\\$\\d_]*$")
       --rule-update-less-than int             允许一次性删除多少行数据. 使用explain计算出来 (default 10000)
 ```
 
@@ -330,6 +335,8 @@ curl http://127.0.0.1:19527/ClientParams
     RuleAllowInsertIgnore              bool            是否允许 insert ignore
     RuleAllowInsertReplace             bool            是否允许 replace into
     RuleIndexCharLength                int             索引允许的长度. 默认:767
+    RuleAllowColumnCollate             bool            是否字段允许 COLLATE
+    RuleAllowColumnCharset             bool            是否字段允许 CHARSET
 
     ------------------------- 是否自定义, 自定义审核规则参数 -------------------------------
     CustomRuleNameLength               bool            是否自定义, 通用名字长度
@@ -385,7 +392,9 @@ curl http://127.0.0.1:19527/ClientParams
     CustomRuleAllowInsertNoColumn      bool            是否自定义, 是否允许不指定字段
     CustomRuleAllowInsertIgnore        bool            是否自定义, 是否允许 insert ignore
     CustomRuleAllowInsertReplace       bool            是否自定义, 是否允许 replace boolo
-    CustomRuleIndexCharLength          bool            是否自定义, 索引允许的长度
+    CustomRuleIndexCharLength          bool            是否自定义, 索引长度
+    CustomRuleAllowColumnCollate       bool            是否使用自定义, 是否字段允许 COLLATE
+    CustomRuleAllowColumnCharset       bool            是否使用自定义, 是否字段允许 CHARSET
 ```
 
 可以将网址输入到流量器中查看

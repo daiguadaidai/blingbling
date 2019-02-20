@@ -109,4 +109,8 @@ const (
 	RULE_ALLOW_INSERT_REPLIACE = true
 	// 索引字符长度
 	RULE_INDEX_CHAR_LENGTH = 767
+	// 是否允许此段使用COLLATE
+	RULE_ALLOW_COLUMN_COLLATE = false
+	// 是否允许此段使用CHARSET
+	RULE_ALLOW_COLUMN_CHARSET = false
 )

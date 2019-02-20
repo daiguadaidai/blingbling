@@ -110,4 +110,8 @@ const (
 	MSG_ALLOW_INSERT_REPLIACE_ERROR = "不允许replace into 操作"
 	// 索引字符长度
 	MSG_INDEX_CHAR_LENGTH_ERROR = "索引长度不能超过 %d"
+	// 是否允许此段使用COLLATE
+	MSG_ALLOW_COLUMN_COLLATE = "字段: %s. 不允许使用 COLLATE 属性"
+	// 是否允许此段使用CHARSET
+	MSG_ALLOW_COLUMN_CHARSET = "字段: %s. 不允许使用 CHARSET 属性"
 )

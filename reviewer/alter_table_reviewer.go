@@ -450,14 +450,54 @@ func (this *AlterTableReviewer) DetectNewColumn(
 		}
 	}
 
+	// 检测字段定义的 Charset
+	if this.ReviewConfig.RuleAllowColumnCharset { // 允许collate
+		haveError, msg = DetectCharset(_column.Tp.Charset, this.ReviewConfig.RuleCollate)
+		if haveError {
+			this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s . %s", _column.Name.String(), msg))
+			return
+		}
+	} else { // 不允许charset
+		if len(_column.Tp.Charset) > 0 {
+			haveError = true
+			this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf(config.MSG_ALLOW_COLUMN_CHARSET,
+				_column.Name.String()))
+			return
+		}
+	}
+
+	// 检测字段定义 Collect
+	if this.ReviewConfig.RuleAllowColumnCollate { // 允许字段使用charset
+		haveError, msg = DetectCollate(_column.Tp.Charset, this.ReviewConfig.RuleCollate)
+		if haveError {
+			this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s . %s", _column.Name.String(), msg))
+			return
+		}
+	} else { // 不允许字段使用collate
+		if len(_column.Tp.Collate) > 0 {
+			haveError = true
+			this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf(config.MSG_ALLOW_COLUMN_COLLATE,
+				_column.Name.String()))
+			return
+		}
+	}
+
+	// 检测 blob 类型不能有默认值
+	if IsBlob(_column.Tp.Tp) && hasDefaultValue {
+		haveError = true
+		this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s. Text/Blob/JSON/GEO类型 不能有默认值",
+			_column.Name.String()))
+		return
+	}
+
 	// 添加字段定义长度
-	len, err := GetColumnDefineCharLen(_column)
+	charLen, err := GetColumnDefineCharLen(_column)
 	if err != nil {
 		haveError = true
 		this.ReViewMSG.AppendMSG(haveError, err.Error())
 		return
 	}
-	this.ColumnsCharLenMap[_column.Name.String()] = len
+	this.ColumnsCharLenMap[_column.Name.String()] = charLen
 
 	return
 }

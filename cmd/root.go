@@ -220,4 +220,10 @@ func init() {
 		fmt.Sprintf("是否允许 INSERT REPLACE 语句. 默认: %v", config.RULE_ALLOW_INSERT_REPLIACE))
 	rootCmd.Flags().IntVar(&runConfig.RuleIndexCharLength, "rule-index-char-length",
 		config.RULE_INDEX_CHAR_LENGTH, "索引字符允许的长度")
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowColumnCollate, "rule-allow-column-collate",
+		config.RULE_ALLOW_COLUMN_COLLATE,
+		fmt.Sprintf("是否允许字段使用 COLLATE. 默认: %v", config.RULE_ALLOW_COLUMN_COLLATE))
+	rootCmd.Flags().BoolVar(&runConfig.RuleAllowColumnCharset, "rule-allow-column-charset",
+		config.RULE_ALLOW_COLUMN_CHARSET,
+		fmt.Sprintf("是否允许字段使用 CHARSET. 默认: %v", config.RULE_ALLOW_COLUMN_CHARSET))
 }

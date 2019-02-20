@@ -411,3 +411,57 @@ ALTER TABLE emp
 	}
 
 }
+
+func TestAlterTableReviewer_Review_Collate(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+	sql := `
+ALTER TABLE a
+    ADD user_group varchar(128)  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '' NOT NULL NULL NULL
+    COMMENT 'xxx' AFTER b
+    `
+	fmt.Sprintf("%v", sql)
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig).(*AlterTableReviewer)
+		reviewMSG := review.Review()
+		fmt.Println(reviewMSG.String())
+	}
+}
+
+func TestAlterTableReviewer_Review_TextDefault(t *testing.T) {
+	var host string = "10.10.10.21"
+	var port int = 3307
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "employees"
+	sql := `
+ALTER TABLE a
+    ADD user_group text DEFAULT '' NOT NULL NULL NULL
+    COMMENT 'xxx' AFTER b
+    `
+	fmt.Sprintf("%v", sql)
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
+	reviewConfig := config.NewReviewConfig()
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig).(*AlterTableReviewer)
+		reviewMSG := review.Review()
+		fmt.Println(reviewMSG.String())
+	}
+}

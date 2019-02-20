@@ -120,6 +120,10 @@ type RequestReviewParam struct {
 	CustomRuleAllowInsertReplace bool
 	// 索引允许长度
 	CustomRuleIndexCharLength bool
+	// 是否使用自定义, 是否字段允许 COLLATE
+	CustomRuleAllowColumnCollate bool
+	// 是否使用自定义, 是否字段允许 CHARSET
+	CustomRuleAllowColumnCharset bool
 }
 
 func (this *RequestReviewParam) GetReviewConfig() *config.ReviewConfig {
@@ -341,6 +345,14 @@ func (this *RequestReviewParam) GetReviewConfig() *config.ReviewConfig {
 	if this.CustomRuleIndexCharLength {
 		reviewConfig.RuleIndexCharLength = this.ReviewConfig.RuleIndexCharLength
 	}
+	// 是否使用自定义, 是否字段允许 COLLATE
+	if this.CustomRuleAllowColumnCollate {
+		reviewConfig.RuleAllowColumnCollate = this.ReviewConfig.RuleAllowColumnCollate
+	}
+	// 是否使用自定义, 是否字段允许 CHARSET
+	if this.CustomRuleAllowColumnCharset {
+		reviewConfig.RuleAllowColumnCharset = this.ReviewConfig.RuleAllowColumnCharset
+	}
 
 	return reviewConfig
 }
@@ -424,6 +436,8 @@ func (this *RequestReviewParam) ClientParams() string {
     RuleAllowInsertIgnore              bool            是否允许 insert ignore
     RuleAllowInsertReplace             bool            是否允许 replace into
     RuleIndexCharLength                int             索引允许的长度. 默认:767
+    RuleAllowColumnCollate             bool            是否字段允许 COLLATE
+    RuleAllowColumnCharset             bool            是否字段允许 CHARSET
 
     ------------------------- 是否自定义, 自定义审核规则参数 -------------------------------
     CustomRuleNameLength               bool            是否自定义, 通用名字长度
@@ -480,5 +494,7 @@ func (this *RequestReviewParam) ClientParams() string {
     CustomRuleAllowInsertIgnore        bool            是否自定义, 是否允许 insert ignore
     CustomRuleAllowInsertReplace       bool            是否自定义, 是否允许 replace boolo
     CustomRuleIndexCharLength          bool            是否自定义, 索引长度
+    CustomRuleAllowColumnCollate       bool            是否使用自定义, 是否字段允许 COLLATE
+    CustomRuleAllowColumnCharset       bool            是否使用自定义, 是否字段允许 CHARSET
 `
 }

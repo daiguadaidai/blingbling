@@ -116,6 +116,10 @@ type ReviewConfig struct {
 	RuleAllowInsertReplace bool
 	// 索引字符长度
 	RuleIndexCharLength int
+	// 是否允许字段使用 collate
+	RuleAllowColumnCollate bool
+	// 是否允许字段使用 charset
+	RuleAllowColumnCharset bool
 }
 
 func NewReviewConfig() *ReviewConfig {
@@ -175,6 +179,8 @@ func NewReviewConfig() *ReviewConfig {
 	rc.RuleAllowInsertIgnore = RULE_ALLOW_INSERT_IGNORE
 	rc.RuleAllowInsertReplace = RULE_ALLOW_INSERT_REPLIACE
 	rc.RuleIndexCharLength = RULE_INDEX_CHAR_LENGTH
+	rc.RuleAllowColumnCollate = RULE_ALLOW_COLUMN_COLLATE
+	rc.RuleAllowColumnCharset = RULE_ALLOW_COLUMN_CHARSET
 
 	return rc
 }
