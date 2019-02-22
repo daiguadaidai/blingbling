@@ -336,6 +336,12 @@ func (this *AlterTableReviewer) DetectNewColumn(
 			isNotNull = true
 		case ast.ColumnOptionDefaultValue:
 			hasDefaultValue = true
+			if err := DetectColumnDefaultValue(_column.Tp.Tp, option.Expr.GetValue()); err != nil {
+				haveError = true
+				this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("字段%s, %s",
+					_column.Name.String(), err.Error()))
+				return
+			}
 		case ast.ColumnOptionComment:
 			if strings.Trim(option.Expr.GetValue().(string), " ") != "" {
 				hasColumnComment = true
@@ -480,14 +486,6 @@ func (this *AlterTableReviewer) DetectNewColumn(
 				_column.Name.String()))
 			return
 		}
-	}
-
-	// 检测 blob 类型不能有默认值
-	if IsBlob(_column.Tp.Tp) && hasDefaultValue {
-		haveError = true
-		this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s. Text/Blob/JSON/GEO类型 不能有默认值",
-			_column.Name.String()))
-		return
 	}
 
 	// 添加字段定义长度

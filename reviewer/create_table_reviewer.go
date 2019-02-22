@@ -677,6 +677,12 @@ func (this *CreateTableReviewer) DetectColumnOptions() (haveError bool) {
 				isNotNull = true
 			case ast.ColumnOptionDefaultValue:
 				hasDefaultValue = true
+				if err := DetectColumnDefaultValue(column.Tp.Tp, option.Expr.GetValue()); err != nil {
+					haveError = true
+					this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("字段%s, %s",
+						column.Name.String(), err.Error()))
+					return
+				}
 			case ast.ColumnOptionComment:
 				if strings.Trim(option.Expr.GetValue().(string), " ") != "" {
 					hasColumnComment = true
@@ -769,14 +775,6 @@ func (this *CreateTableReviewer) DetectColumnOptions() (haveError bool) {
 				this.ReviewMSG.AppendMSG(haveError, msg)
 				return
 			}
-		}
-
-		// 9. 检测 blob 类型不能有默认值
-		if IsBlob(column.Tp.Tp) && hasDefaultValue {
-			haveError = true
-			this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("字段:%s. Text/Blob/JSON/GEO类型 不能有默认值",
-				column.Name.String()))
-			return
 		}
 	}
 

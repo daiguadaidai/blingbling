@@ -12,6 +12,7 @@ import (
 	"github.com/daiguadaidai/blingbling/dependency/mysql"
 	"github.com/dlclark/regexp2"
 	"github.com/juju/errors"
+	"time"
 )
 
 /* 检测名称长度是否合法
@@ -458,13 +459,41 @@ func GetColumnsCharLen(nameLenMap map[string]int, names ...string) int {
 	return total
 }
 
-// 是否是Blob类型, text/blob/longblob ...
-func IsBlob(sqlType byte) bool {
-	switch sqlType {
-	case mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeBlob,
+const (
+	MIN_TIMESTAMP_INT64 = 28801000000000
+	MAX_TIMESTAMP_INT64 = 2147512447000000000
+)
+
+/* 检测字段默认值
+Param:
+    tp: 字段类型
+    value: 字段默认值
+*/
+func DetectColumnDefaultValue(tp byte, value interface{}) error {
+	valueStr := common.InterfaceToStr(value)
+	switch tp {
+	case mysql.TypeTimestamp:
+		if len(valueStr) == 0 {
+			return fmt.Errorf("timestamp 不合法默认值")
+		}
+		format, err := common.TimeFormatParse(valueStr)
+		if err != nil {
+			return err
+		}
+		ts, err := time.Parse(format, valueStr)
+		if err != nil {
+			return fmt.Errorf("timestamp时间解析错误. "+
+				"正确时间格式为: 1970-01-01 08:00:01 到 2038-01-19 11:14:07. %v", err)
+		}
+		nanoTS := ts.UnixNano()
+		if nanoTS < MIN_TIMESTAMP_INT64 || ts.UnixNano() > MAX_TIMESTAMP_INT64 {
+			return fmt.Errorf("%s timestamp 类型的取值范围为: "+
+				"1970-01-01 08:00:01 到 2038-01-19 11:14:07", valueStr)
+		}
+	case mysql.TypeBlob, mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob,
 		mysql.TypeJSON, mysql.TypeGeometry:
-		return true
+		return fmt.Errorf("Text/Blob/JSON/GEO类型 不能有默认值")
 	}
 
-	return false
+	return nil
 }
