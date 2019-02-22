@@ -391,7 +391,7 @@ const (
 	SQL_TYPE_TIME_MAX_LENGTH       = 3
 	SQL_TYPE_YEAR_MAX_LENGTH       = 1
 	SQL_TYPE_TIMESTAMP_MAX_LENGTH  = 4
-	SQL_TYPE_DATETIME_MAX_LENGTH   = 8
+	SQL_TYPE_DATETIME_MAX_LENGTH   = 5
 )
 
 // 获取字段的定义长度
@@ -412,8 +412,24 @@ func GetColumnDefineCharLen(column *ast.ColumnDef) (int, error) {
 	case mysql.TypeDouble:
 		return SQL_TYPE_DUOBLE_MAX_LENGTH, nil
 	case mysql.TypeTimestamp:
+		switch column.Tp.Decimal {
+		case 1, 2:
+			return SQL_TYPE_TIMESTAMP_MAX_LENGTH + 1, nil
+		case 3, 4:
+			return SQL_TYPE_TIMESTAMP_MAX_LENGTH + 2, nil
+		case 5, 6:
+			return SQL_TYPE_TIMESTAMP_MAX_LENGTH + 3, nil
+		}
 		return SQL_TYPE_TIMESTAMP_MAX_LENGTH, nil
 	case mysql.TypeDatetime:
+		switch column.Tp.Decimal {
+		case 1, 2:
+			return SQL_TYPE_DATETIME_MAX_LENGTH + 1, nil
+		case 3, 4:
+			return SQL_TYPE_DATETIME_MAX_LENGTH + 2, nil
+		case 5, 6:
+			return SQL_TYPE_DATETIME_MAX_LENGTH + 3, nil
+		}
 		return SQL_TYPE_DATETIME_MAX_LENGTH, nil
 	case mysql.TypeYear:
 		return SQL_TYPE_YEAR_MAX_LENGTH, nil
