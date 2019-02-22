@@ -29,9 +29,10 @@ type TableInfo struct {
 	Indexes           map[string][]string
 	FullTextIndex     map[string][]string
 	PartitionNames    map[string]bool
-	ColumnTypeCount   map[byte]int   // 保存字段类型出现的个数
-	ColumnsCharLenMap map[string]int // 每个字段长度
-	AutoIncrementName string         // 自增字段名称
+	ColumnTypeCount   map[byte]int    // 保存字段类型出现的个数
+	ColumnsCharLenMap map[string]int  // 每个字段长度
+	AutoIncrementName string          // 自增字段名称
+	ColumnNameTypeMap map[string]byte // 字段名类型
 }
 
 /* 新建一个表信息
@@ -40,11 +41,15 @@ Params:
     _table: 表名
 */
 func NewTableInfo(_dbConfig *config.DBConfig, _table string) *TableInfo {
-	return &TableInfo{
+	tableInfo := &TableInfo{
 		DBName:    _dbConfig.Database,
 		TableName: _table,
 		Instance:  dao.NewInstance(_dbConfig),
 	}
+
+	tableInfo.ColumnNameTypeMap = make(map[string]byte)
+	return tableInfo
+
 }
 
 // 打开实例链接
@@ -497,6 +502,7 @@ func (this *TableInfo) ParseCreateTableColumns(_createTableStmt *ast.CreateTable
 			continue
 		}
 		this.ColumnsCharLenMap[column.Name.String()] = len
+		this.ColumnNameTypeMap[column.Name.String()] = column.Tp.Tp
 	}
 }
 

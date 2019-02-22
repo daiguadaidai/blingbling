@@ -433,30 +433,17 @@ func GetColumnDefineCharLen(column *ast.ColumnDef) (int, error) {
 		return SQL_TYPE_TEXT_MAX_LENGTH, nil
 	case mysql.TypeMediumBlob:
 		return SQL_TYPE_MEDIUMTEXT_MAX_LENGTH, nil
-	case mysql.TypeLongBlob:
+	case mysql.TypeLongBlob, mysql.TypeGeometry, mysql.TypeJSON:
 		return SQL_TYPE_LONGTEXT_MAX_LENGTH, nil
 	case mysql.TypeString, mysql.TypeVarchar:
 		if column.Tp.Flen >= SQL_TYPE_VARCHAR_MAX_LENGTH {
 			return -1, fmt.Errorf("字段产度")
 		}
 		return column.Tp.Flen, nil
-	case mysql.TypeGeometry, mysql.TypeSet, mysql.TypeEnum, mysql.TypeJSON,
-		mysql.TypeBit, mysql.TypeNull:
+	case mysql.TypeSet, mysql.TypeEnum, mysql.TypeBit, mysql.TypeNull:
 		return -1, fmt.Errorf("未知类型: %s. 字段名:", column.Tp, column.Name)
 	}
 	return -1, fmt.Errorf("未知类型: %s. 字段名:", column.Tp, column.Name)
-}
-
-// 获取所有字段的长度
-func GetColumnsCharLen(nameLenMap map[string]int, names ...string) int {
-	total := 0
-	for _, name := range names {
-		if len, ok := nameLenMap[name]; ok {
-			total += len
-		}
-	}
-
-	return total
 }
 
 const (
@@ -496,4 +483,21 @@ func DetectColumnDefaultValue(tp byte, value interface{}) error {
 	}
 
 	return nil
+}
+
+// 获取索引字段长度
+func GetColumnTypePrefixCharLen(defineCharLen int, prefixLen int, columnType byte) int {
+	switch columnType {
+	case mysql.TypeTiny, mysql.TypeShort, mysql.TypeInt24, mysql.TypeLong, mysql.TypeLonglong,
+		mysql.TypeFloat, mysql.TypeDouble, mysql.TypeTimestamp, mysql.TypeDatetime,
+		mysql.TypeYear, mysql.TypeDate, mysql.TypeNewDate, mysql.TypeDuration,
+		mysql.TypeDecimal, mysql.TypeNewDecimal, mysql.TypeTinyBlob, mysql.TypeBlob,
+		mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeGeometry, mysql.TypeSet,
+		mysql.TypeEnum, mysql.TypeJSON, mysql.TypeBit, mysql.TypeNull:
+		return defineCharLen
+	case mysql.TypeString, mysql.TypeVarchar:
+		return prefixLen
+	}
+
+	return defineCharLen
 }

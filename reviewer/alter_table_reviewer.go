@@ -13,22 +13,24 @@ import (
 type AlterTableReviewer struct {
 	ReViewMSG *ReviewMSG
 
-	StmtNode          *ast.AlterTableStmt
-	ReviewConfig      *config.ReviewConfig
-	DBConfig          *config.DBConfig
-	AddColumns        map[string]bool     // 新添加的字段
-	DropColumns       map[string]bool     // 要删除的字段
-	AddIndexes        map[string][]string // 新添加的索引
-	DropIndexes       map[string]bool     //  要删除的索引
-	AddUniqueIndexes  map[string][]string // 新添加的唯一索引
-	IsDropPrimaryKey  bool                // 要删除的主键
-	PKName            string              // 主键名称
-	PKColumnNames     map[string]bool     // 主键字段
-	AfterColumnNames  map[string]bool     // 有出现在 after 字句中的字段
-	AutoIncrementName string              // 自增字段名字
-	AddPartitions     map[string]bool     // 需要添加的分区
-	DropPartitions    map[string]bool     // 需要删除的分区
-	ColumnsCharLenMap map[string]int      // 每个字段
+	StmtNode             *ast.AlterTableStmt
+	ReviewConfig         *config.ReviewConfig
+	DBConfig             *config.DBConfig
+	AddColumns           map[string]bool           // 新添加的字段
+	DropColumns          map[string]bool           // 要删除的字段
+	AddIndexes           map[string][]string       // 新添加的索引
+	DropIndexes          map[string]bool           //  要删除的索引
+	AddUniqueIndexes     map[string][]string       // 新添加的唯一索引
+	IsDropPrimaryKey     bool                      // 要删除的主键
+	PKName               string                    // 主键名称
+	PKColumnNames        map[string]bool           // 主键字段
+	AfterColumnNames     map[string]bool           // 有出现在 after 字句中的字段
+	AutoIncrementName    string                    // 自增字段名字
+	AddPartitions        map[string]bool           // 需要添加的分区
+	DropPartitions       map[string]bool           // 需要删除的分区
+	ColumnsCharLenMap    map[string]int            // 每个字段
+	PrefixIndexColumnMap map[string]map[string]int // 有前缀索引的字段长度
+	ColumnNameTypeMap    map[string]byte           // 字段名类型
 
 	NotAllowColumnTypeMap   map[string]bool // 不允许的字段类型
 	NotNullColumnTypeMap    map[string]bool // 必须为not null的字段类型
@@ -56,6 +58,8 @@ func (this *AlterTableReviewer) Init() {
 	this.AddPartitions = make(map[string]bool)
 	this.DropPartitions = make(map[string]bool)
 	this.ColumnsCharLenMap = make(map[string]int)
+	this.PrefixIndexColumnMap = make(map[string]map[string]int)
+	this.ColumnNameTypeMap = make(map[string]byte)
 
 	this.NotAllowColumnTypeMap = this.ReviewConfig.GetNotAllowColumnTypeMap()
 	this.NotNullColumnTypeMap = this.ReviewConfig.GetNotNullColumnTypeMap()
@@ -298,6 +302,9 @@ func (this *AlterTableReviewer) DetectNewColumn(
 		return
 	}
 	this.ReViewMSG.AppendMSG(haveError, msg)
+
+	// 添加字段类型
+	this.ColumnNameTypeMap[_column.Name.String()] = _column.Tp.Tp
 
 	var isNotNull bool = false        // 该字段是否为 not null
 	var hasDefaultValue bool = false  // 是否有默认值
@@ -575,6 +582,21 @@ func (this *AlterTableReviewer) DetectAddConstraint(_spec *ast.AlterTableSpec) (
 		}
 		this.AddIndexes[_spec.Constraint.Name] = append(this.AddIndexes[_spec.Constraint.Name], indexName.Column.String())
 		indexColumnNameMap[indexName.Column.String()] = true // 保存 索引/约束中的字段名
+
+		// 添加前缀索引长度
+		if indexName.Length != -1 { // 有指定长度
+			if indexName.Length == 0 { // 前缀索引字段长度不能设置为0
+				haveError = true
+				this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s 前最索引长度值不能为0",
+					_spec.Constraint.Name, indexName.Column.String()))
+				return
+			}
+
+			if _, ok := this.PrefixIndexColumnMap[_spec.Constraint.Name]; !ok {
+				this.PrefixIndexColumnMap[_spec.Constraint.Name] = make(map[string]int)
+			}
+			this.PrefixIndexColumnMap[_spec.Constraint.Name][indexName.Column.String()] = indexName.Length
+		}
 	}
 
 	// 约束名称长度
@@ -1013,7 +1035,7 @@ func (this *AlterTableReviewer) DetectInstanceTable() (haveError bool) {
 	}
 
 	// 检测索引长度
-	haveError = this.DetectIndexCharLength(this.ColumnsCharLenMap, tableInfo.ColumnsCharLenMap)
+	haveError = this.DetectIndexCharLength(tableInfo)
 	if haveError {
 		return
 	}
@@ -1323,10 +1345,35 @@ func (this *AlterTableReviewer) DetectAfterColumnExists(_tableInfo *TableInfo) (
 
 // 检测索引的字符长度, 没有获取数据库中的源数据
 func (this *AlterTableReviewer) DetectIndexCharLengthNoInstance() (haveError bool) {
-	for name, columnNames := range this.AddIndexes {
-		len := GetColumnsCharLen(this.ColumnsCharLenMap, columnNames...)
-		if len > this.ReviewConfig.RuleIndexCharLength {
-			msg := fmt.Sprintf("检测失败(没有链接数据库). 索引:%v. %v", name,
+	for indexName, columnNames := range this.AddIndexes {
+		prefixColumnLenMap, isPrefixIndex := this.PrefixIndexColumnMap[indexName]
+		totalLen := 0
+		for _, columnName := range columnNames {
+			// 该字段存在
+			if defineLen, columnCharOK := this.ColumnsCharLenMap[columnName]; columnCharOK {
+				if isPrefixIndex { // 该索引有定义前缀索引
+					if columnType, columnTypeOK := this.ColumnNameTypeMap[columnName]; columnTypeOK {
+						// 有获取到字段定义类型
+						if prefixLen, prefixCharOK := prefixColumnLenMap[columnName]; prefixCharOK {
+							if prefixLen > defineLen { // 字段前缀长度大于定义长度
+								haveError = true
+								this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, "+
+									"字段:%s(没有链接数据库). 字段前缀长度(%d)大于定义长度(%d)",
+									indexName, columnName, prefixLen, defineLen))
+								return
+							}
+							charLen := GetColumnTypePrefixCharLen(defineLen, prefixLen, columnType)
+							totalLen += charLen
+							continue
+						}
+					}
+				}
+				// 索引没有定义前缀索引 / 不是前缀索引的字段直接使用字段定义长度
+				totalLen += defineLen
+			}
+		}
+		if totalLen > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("没有链接数据库. 索引:%v. %v", indexName,
 				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
 			haveError = true
 			this.ReViewMSG.AppendMSG(haveError, msg)
@@ -1337,12 +1384,56 @@ func (this *AlterTableReviewer) DetectIndexCharLengthNoInstance() (haveError boo
 }
 
 // 检测索引的字符长度, 没有获取数据库中的源数据
-func (this *AlterTableReviewer) DetectIndexCharLength(maps ...map[string]int) (haveError bool) {
-	lenMap := common.CombindMapStrInt(maps...)
-	for name, columnNames := range this.AddIndexes {
-		len := GetColumnsCharLen(lenMap, columnNames...)
-		if len > this.ReviewConfig.RuleIndexCharLength {
-			msg := fmt.Sprintf("检测失败. 索引:%v. %v", name,
+func (this *AlterTableReviewer) DetectIndexCharLength(tableInfo *TableInfo) (haveError bool) {
+	// 合并新添加字段和建表语句已经存在的的定义长度
+	columnLenMap := common.CombindMapStrInt(this.ColumnsCharLenMap, tableInfo.ColumnsCharLenMap)
+	// 合并添加字段和建表语句已存在的字段类型
+	columnTypeMap := common.CombindMapStrByte(this.ColumnNameTypeMap, tableInfo.ColumnNameTypeMap)
+
+	// 循环检测添加新的索引判断
+	for indexName, columnNames := range this.AddIndexes {
+		prefixColumnLenMap, isPrefixIndex := this.PrefixIndexColumnMap[indexName]
+
+		totalLen := 0
+		for _, columnName := range columnNames {
+			// 获取字段定义字符长度
+			if defineCharLen, defineLenOK := columnLenMap[columnName]; defineLenOK {
+				if isPrefixIndex { // 判断该字段是否有使用前缀索引
+					// 判断该字段是否有指定类型
+					if columnType, typOK := columnTypeMap[columnName]; typOK {
+						// 字段有设置前缀, 只取前最就好
+						if prefixLen, prefixOK := prefixColumnLenMap[columnName]; prefixOK {
+							if prefixLen > defineCharLen { // 字段前缀长度大于字段定义长度
+								haveError = true
+								this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s, "+
+									"前缀长度(%d)大于定义长度(%d)", indexName, columnName,
+									prefixLen, defineCharLen))
+								return
+							}
+							charLen := GetColumnTypePrefixCharLen(defineCharLen, prefixLen, columnType)
+							totalLen += charLen
+							continue
+						}
+					} else {
+						haveError = true
+						this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s "+
+							"不能获取到字段类型(检测索引字符长度时)", indexName, columnName))
+						return
+					}
+				}
+
+				// 索引没有定义前缀索引 / 不是前缀索引的字段直接使用字段定义长度
+				totalLen += defineCharLen
+			} else {
+				haveError = true
+				this.ReViewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s "+
+					"不能获取到字段定义长度(检测索引字符长度时)", indexName, columnName))
+				return
+			}
+		}
+
+		if totalLen > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("索引:%v. %v", indexName,
 				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
 			haveError = true
 			this.ReViewMSG.AppendMSG(haveError, msg)

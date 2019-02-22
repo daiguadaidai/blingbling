@@ -33,8 +33,10 @@ type CreateTableReviewer struct {
 	NotNullColumnNameMap    map[string]bool     // 必须为 not null的字段名称
 	ColumnTypeCount         map[byte]int        // 保存字段类型出现的个数
 	PartitionColumns        []string
-	NeedDefaultValueNameMap map[string]bool // 必须要有默认值的字段名
-	ColumnsCharLenMap       map[string]int  // 每个字段
+	NeedDefaultValueNameMap map[string]bool           // 必须要有默认值的字段名
+	ColumnsCharLenMap       map[string]int            // 每个字段
+	PrefixIndexColumnMap    map[string]map[string]int // 有前缀索引的字段长度
+	ColumnNameTypeMap       map[string]byte           // 字段名类型
 
 	SchemaName string
 }
@@ -55,6 +57,8 @@ func (this *CreateTableReviewer) Init() {
 	this.PartitionColumns = make([]string, 0, 1)
 	this.NeedDefaultValueNameMap = this.ReviewConfig.GetNeedDefaultValueNameMap()
 	this.ColumnsCharLenMap = make(map[string]int)
+	this.PrefixIndexColumnMap = make(map[string]map[string]int)
+	this.ColumnNameTypeMap = make(map[string]byte)
 
 	if this.StmtNode.Table.Schema.String() != "" {
 		this.SchemaName = this.StmtNode.Table.Schema.String()
@@ -344,7 +348,8 @@ func (this *CreateTableReviewer) DetectColumns() (haveError bool) {
 			this.ReviewMSG.AppendMSG(haveError, msg)
 			return
 		}
-		this.ColumnNames[column.Name.String()] = true // 缓存字段名
+		this.ColumnNames[column.Name.String()] = true               // 缓存字段名
+		this.ColumnNameTypeMap[column.Name.String()] = column.Tp.Tp // 记录字段类型
 
 		// 2. 检测字段名长度
 		haveError, msg = DetectNameLength(column.Name.String(), this.ReviewConfig.RuleNameLength)
@@ -532,6 +537,21 @@ func (this *CreateTableReviewer) DetectConstraints() (haveError bool) {
 				haveError = true
 				this.ReviewMSG.AppendMSG(haveError, msg)
 				return
+			}
+
+			// 添加前缀索引长度
+			if indexName.Length != -1 { // 有指定长度
+				if indexName.Length == 0 { // 前缀索引字段长度不能设置为0
+					haveError = true
+					this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s 前最索引长度值不能为0",
+						constraint.Name, indexName.Column.String()))
+					return
+				}
+
+				if _, ok := this.PrefixIndexColumnMap[constraint.Name]; !ok {
+					this.PrefixIndexColumnMap[constraint.Name] = make(map[string]int)
+				}
+				this.PrefixIndexColumnMap[constraint.Name][indexName.Column.String()] = indexName.Length
 			}
 		}
 
@@ -1030,10 +1050,49 @@ func (this *CreateTableReviewer) DetectIndexCount() (haveError bool) {
 
 // 检测索引的字符长度
 func (this *CreateTableReviewer) DetectIndexCharLength() (haveError bool) {
-	for name, columnNames := range this.Indexes {
-		len := GetColumnsCharLen(this.ColumnsCharLenMap, columnNames...)
-		if len > this.ReviewConfig.RuleIndexCharLength {
-			msg := fmt.Sprintf("检测失败. 索引:%v. %v", name,
+	for indexName, columnNames := range this.Indexes {
+		prefixColumnLenMap, isPrefixIndex := this.PrefixIndexColumnMap[indexName]
+
+		totalLen := 0
+		for _, columnName := range columnNames {
+			// 获取字段定义字符长度
+			if defineCharLen, defineLenOK := this.ColumnsCharLenMap[columnName]; defineLenOK {
+				if isPrefixIndex { // 判断该字段是否有使用前缀索引
+					// 判断该字段是否有指定类型
+					if columnType, typOK := this.ColumnNameTypeMap[columnName]; typOK {
+						// 字段有设置前缀, 只取前最就好
+						if prefixLen, prefixOK := prefixColumnLenMap[columnName]; prefixOK {
+							if prefixLen > defineCharLen { // 字段前缀长度大于字段定义长度
+								haveError = true
+								this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s, "+
+									"前缀长度(%d)大于定义长度(%d)", indexName, columnName,
+									prefixLen, defineCharLen))
+								return
+							}
+							charLen := GetColumnTypePrefixCharLen(defineCharLen, prefixLen, columnType)
+							totalLen += charLen
+							continue
+						}
+					} else {
+						haveError = true
+						this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s "+
+							"不能获取到字段类型(检测索引字符长度时)", indexName, columnName))
+						return
+					}
+				}
+
+				// 索引没有定义前缀索引 / 不是前缀索引的字段直接使用字段定义长度
+				totalLen += defineCharLen
+			} else {
+				haveError = true
+				this.ReviewMSG.AppendMSG(haveError, fmt.Sprintf("索引:%s, 字段:%s "+
+					"不能获取到字段定义长度(检测索引字符长度时)", indexName, columnName))
+				return
+			}
+		}
+
+		if totalLen > this.ReviewConfig.RuleIndexCharLength {
+			msg := fmt.Sprintf("索引:%v. %v", indexName,
 				fmt.Sprintf(config.MSG_INDEX_CHAR_LENGTH_ERROR, this.ReviewConfig.RuleIndexCharLength))
 			haveError = true
 			this.ReviewMSG.AppendMSG(haveError, msg)

@@ -806,3 +806,40 @@ CREATE TABLE test.t1 (
 
 	}
 }
+
+func TestCreateTableReviewer_Review_PrefixIndex(t *testing.T) {
+	var host string = "10.10.10.12"
+	var port int = 3306
+	var username string = "HH"
+	var password string = "oracle12"
+	var database string = "test"
+	sql := `
+CREATE TABLE test.t111 (
+  id bigint(18) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  dep varchar(2000) NOT NULL DEFAULT '' Comment '注释',
+  arr varchar(3) NOT NULL DEFAULT '' Comment '注释',
+  PRIMARY KEY(id),
+  KEY idx_flighttime (arr, dep(1000))
+) ENGINE=InnoDb  DEFAULT CHARSET=utF8 COLLATE=Utf8mb4_general_ci comment="你号";
+    `
+	sqlParser := parser.New()
+	stmtNodes, err := sqlParser.Parse(sql, "", "")
+	if err != nil {
+		fmt.Printf("Syntax Error: %v", err)
+	}
+	// 循环每一个sql语句进行解析, 并且生成相关审核信息
+	dbConfig := config.NewDBConfig(host, port, username, password, database)
+	reviewConfig := config.NewReviewConfig()
+	reviewMSGs := make([]*ReviewMSG, 0, 1)
+	for _, stmtNode := range stmtNodes {
+		review := NewReviewer(stmtNode, reviewConfig, dbConfig)
+		reviewMSG := review.Review()
+		reviewMSG.ResetHaveErrorAndWarning()
+		reviewMSGs = append(reviewMSGs, reviewMSG)
+	}
+	for _, reviewMSG := range reviewMSGs {
+		if reviewMSG != nil {
+			fmt.Println(reviewMSG.String())
+		}
+	}
+}
