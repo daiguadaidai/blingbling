@@ -1279,8 +1279,8 @@ var (
 		58055: 762, // ShowIndexKwd (1x)
 		58059: 763, // ShowTargetFilterable (1x)
 		58063: 764, // Start (1x)
-		58064: 765, // Starting (1x)
-		57502: 766, // starting (1x)
+		57502: 765, // starting (1x)
+		58064: 766, // Starting (1x)
 		58066: 767, // StatementList (1x)
 		57505: 768, // stored (1x)
 		58071: 769, // StringType (1x)
@@ -2107,8 +2107,8 @@ var (
 		"ShowIndexKwd",
 		"ShowTargetFilterable",
 		"Start",
-		"Starting",
 		"starting",
+		"Starting",
 		"StatementList",
 		"stored",
 		"StringType",
@@ -3483,8 +3483,8 @@ var (
 		{701, 3},
 		{726, 0},
 		{726, 3},
-		{765, 0},
-		{765, 3},
+		{766, 0},
+		{766, 3},
 		{727, 0},
 		{727, 3},
 		{664, 2},
@@ -3931,7 +3931,7 @@ var (
 		// 350
 		{23, 23, 201: 23, 355: 23},
 		{1257, 1257, 201: 1694, 683: 1695},
-		{20, 20, 201: 20, 493: 20, 765: 1686, 1687},
+		{20, 20, 201: 20, 493: 20, 765: 1687, 1686},
 		{18, 18, 201: 18, 493: 1691, 727: 1690},
 		{357: 1688},
 		// 355
@@ -7930,8 +7930,8 @@ yynewstate:
 	case 330:
 		{
 			parser.yyVAL.item = &ast.IndexOption{
-			// TODO bug should be fix here!
-			// KeyBlockSize: $1.(uint64),
+				// TODO bug should be fix here!
+				// KeyBlockSize: $1.(uint64),
 			}
 		}
 	case 331:

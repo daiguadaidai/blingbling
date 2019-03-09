@@ -52,22 +52,19 @@ func simplefileWriterGetter(testCase *fileWriterTestCase) (io.WriteCloser, error
 
 //===============================================================
 type fileWriterTestCase struct {
-	files           []string
-	fileName        string
-	rollingType     rollingType
-	fileSize        int64
-	maxRolls        int
-	datePattern     string
-	writeCount      int
-	resFiles        []string
-	nameMode        rollingNameMode
-	archiveType     rollingArchiveType
-	archiveExploded bool
-	archivePath     string
+	files       []string
+	fileName    string
+	rollingType rollingType
+	fileSize    int64
+	maxRolls    int
+	datePattern string
+	writeCount  int
+	resFiles    []string
+	nameMode    rollingNameMode
 }
 
 func createSimplefileWriterTestCase(fileName string, writeCount int) *fileWriterTestCase {
-	return &fileWriterTestCase{[]string{}, fileName, rollingTypeSize, 0, 0, "", writeCount, []string{fileName}, 0, rollingArchiveNone, false, ""}
+	return &fileWriterTestCase{[]string{}, fileName, rollingTypeSize, 0, 0, "", writeCount, []string{fileName}, 0}
 }
 
 var simplefileWriterTests = []*fileWriterTestCase{
@@ -93,7 +90,7 @@ func NewFileWriterTester(
 }
 
 func isWriterTestFile(fn string) bool {
-	return strings.Contains(fn, ".testlog") || strings.Contains(fn, ".zip") || strings.Contains(fn, ".gz")
+	return strings.Contains(fn, ".testlog")
 }
 
 func cleanupWriterTest(t *testing.T) {

@@ -29,7 +29,7 @@ func MyHandler(w http.ResponseWriter, r *http.Request) {
     var person Person
 
     // r.PostForm is a map of our POST form values
-    err := decoder.Decode(&person, r.PostForm)
+    err = decoder.Decode(&person, r.PostForm)
     if err != nil {
         // Handle error
     }
@@ -83,7 +83,7 @@ The supported field types in the struct are:
 
 Unsupported types are simply ignored, however custom types can be registered to be converted.
 
-More examples are available on the Gorilla website: http://www.gorillatoolkit.org/pkg/schema
+More examples are available on the Gorilla website: https://www.gorillatoolkit.org/pkg/schema
 
 ## License
 

@@ -39,12 +39,9 @@ func createRollingSizeFileWriterTestCase(
 	maxRolls int,
 	writeCount int,
 	resFiles []string,
-	nameMode rollingNameMode,
-	archiveType rollingArchiveType,
-	archiveExploded bool,
-	archivePath string) *fileWriterTestCase {
+	nameMode rollingNameMode) *fileWriterTestCase {
 
-	return &fileWriterTestCase{files, fileName, rollingTypeSize, fileSize, maxRolls, "", writeCount, resFiles, nameMode, archiveType, archiveExploded, archivePath}
+	return &fileWriterTestCase{files, fileName, rollingTypeSize, fileSize, maxRolls, "", writeCount, resFiles, nameMode}
 }
 
 func createRollingDatefileWriterTestCase(
@@ -53,22 +50,9 @@ func createRollingDatefileWriterTestCase(
 	datePattern string,
 	writeCount int,
 	resFiles []string,
-	nameMode rollingNameMode,
-	archiveType rollingArchiveType,
-	archiveExploded bool,
-	archivePath string) *fileWriterTestCase {
+	nameMode rollingNameMode) *fileWriterTestCase {
 
-	return &fileWriterTestCase{files, fileName, rollingTypeTime, 0, 0, datePattern, writeCount, resFiles, nameMode, archiveType, archiveExploded, archivePath}
-}
-
-func TestShouldArchiveWithTar(t *testing.T) {
-	compressionType := compressionTypes[rollingArchiveGzip]
-
-	archiveName := compressionType.rollingArchiveTypeName("log", false)
-
-	if archiveName != "log.tar.gz" {
-		t.Fatalf("archive name should be log.tar.gz but got %v", archiveName)
-	}
+	return &fileWriterTestCase{files, fileName, rollingTypeTime, 0, 0, datePattern, writeCount, resFiles, nameMode}
 }
 
 func TestRollingFileWriter(t *testing.T) {
@@ -80,9 +64,9 @@ func TestRollingFileWriter(t *testing.T) {
 
 func rollingFileWriterGetter(testCase *fileWriterTestCase) (io.WriteCloser, error) {
 	if testCase.rollingType == rollingTypeSize {
-		return NewRollingFileWriterSize(testCase.fileName, testCase.archiveType, testCase.archivePath, testCase.fileSize, testCase.maxRolls, testCase.nameMode, testCase.archiveExploded)
+		return NewRollingFileWriterSize(testCase.fileName, rollingArchiveNone, "", testCase.fileSize, testCase.maxRolls, testCase.nameMode)
 	} else if testCase.rollingType == rollingTypeTime {
-		return NewRollingFileWriterTime(testCase.fileName, testCase.archiveType, testCase.archivePath, -1, testCase.datePattern, testCase.nameMode, testCase.archiveExploded, false)
+		return NewRollingFileWriterTime(testCase.fileName, rollingArchiveNone, "", -1, testCase.datePattern, rollingIntervalDaily, testCase.nameMode)
 	}
 
 	return nil, fmt.Errorf("incorrect rollingType")
@@ -90,27 +74,26 @@ func rollingFileWriterGetter(testCase *fileWriterTestCase) (io.WriteCloser, erro
 
 //===============================================================
 var rollingfileWriterTests = []*fileWriterTestCase{
-	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 10, 1, []string{"log.testlog"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 10, 2, []string{"log.testlog", "log.testlog.1"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"1.log.testlog"}, "log.testlog", 10, 10, 2, []string{"log.testlog", "1.log.testlog", "2.log.testlog"}, rollingNameModePrefix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"log.testlog.1"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.2"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.1"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"log.testlog.9"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.10"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"log.testlog.a", "log.testlog.1b"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.1", "log.testlog.a", "log.testlog.1b"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `dir/log.testlog`, 10, 10, 1, []string{`dir/log.testlog`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `dir/log.testlog`, 10, 10, 2, []string{`dir/log.testlog`, `dir/1.log.testlog`}, rollingNameModePrefix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`dir/dir/log.testlog.1`}, `dir/dir/log.testlog`, 10, 10, 2, []string{`dir/dir/log.testlog`, `dir/dir/log.testlog.1`, `dir/dir/log.testlog.2`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`dir/dir/dir/log.testlog.1`}, `dir/dir/dir/log.testlog`, 10, 1, 2, []string{`dir/dir/dir/log.testlog`, `dir/dir/dir/log.testlog.2`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `./log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.1`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`././././log.testlog.9`}, `log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.10`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, "dir/dir/log.testlog", 10, 1, 2, []string{"dir/dir/log.testlog", "dir/dir/log.testlog.1", "dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `././dir/log.testlog`, 10, 10, 1, []string{`dir/log.testlog`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `././dir/log.testlog`, 10, 10, 2, []string{`dir/log.testlog`, `dir/log.testlog.1`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`././dir/dir/log.testlog.1`}, `dir/dir/log.testlog`, 10, 10, 2, []string{`dir/dir/log.testlog`, `dir/dir/log.testlog.1`, `dir/dir/log.testlog.2`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`././dir/dir/dir/log.testlog.1`}, `dir/dir/dir/log.testlog`, 10, 1, 2, []string{`dir/dir/dir/log.testlog`, `dir/dir/dir/log.testlog.2`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{}, `././log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.1`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{`././././log.testlog.9`}, `log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.10`}, rollingNameModePostfix, rollingArchiveNone, false, ""),
-	createRollingSizeFileWriterTestCase([]string{"././dir/dir/log.testlog.a", "././dir/dir/log.testlog.1b"}, "dir/dir/log.testlog", 10, 1, 2, []string{"dir/dir/log.testlog", "dir/dir/log.testlog.1", "dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, rollingNameModePostfix, rollingArchiveNone, true, ""),
-	createRollingSizeFileWriterTestCase([]string{"log.testlog", "log.testlog.1"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.2", "dir/log.testlog.1.zip"}, rollingNameModePostfix, rollingArchiveZip, true, "dir"),
+	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 10, 1, []string{"log.testlog"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 10, 2, []string{"log.testlog", "log.testlog.1"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{"1.log.testlog"}, "log.testlog", 10, 10, 2, []string{"log.testlog", "1.log.testlog", "2.log.testlog"}, rollingNameModePrefix),
+	createRollingSizeFileWriterTestCase([]string{"log.testlog.1"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.2"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.1"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{"log.testlog.9"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.10"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{"log.testlog.a", "log.testlog.1b"}, "log.testlog", 10, 1, 2, []string{"log.testlog", "log.testlog.1", "log.testlog.a", "log.testlog.1b"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `dir/log.testlog`, 10, 10, 1, []string{`dir/log.testlog`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `dir/log.testlog`, 10, 10, 2, []string{`dir/log.testlog`, `dir/1.log.testlog`}, rollingNameModePrefix),
+	createRollingSizeFileWriterTestCase([]string{`dir/dir/log.testlog.1`}, `dir/dir/log.testlog`, 10, 10, 2, []string{`dir/dir/log.testlog`, `dir/dir/log.testlog.1`, `dir/dir/log.testlog.2`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{`dir/dir/dir/log.testlog.1`}, `dir/dir/dir/log.testlog`, 10, 1, 2, []string{`dir/dir/dir/log.testlog`, `dir/dir/dir/log.testlog.2`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `./log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.1`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{`././././log.testlog.9`}, `log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.10`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{"dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, "dir/dir/log.testlog", 10, 1, 2, []string{"dir/dir/log.testlog", "dir/dir/log.testlog.1", "dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `././dir/log.testlog`, 10, 10, 1, []string{`dir/log.testlog`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `././dir/log.testlog`, 10, 10, 2, []string{`dir/log.testlog`, `dir/log.testlog.1`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{`././dir/dir/log.testlog.1`}, `dir/dir/log.testlog`, 10, 10, 2, []string{`dir/dir/log.testlog`, `dir/dir/log.testlog.1`, `dir/dir/log.testlog.2`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{`././dir/dir/dir/log.testlog.1`}, `dir/dir/dir/log.testlog`, 10, 1, 2, []string{`dir/dir/dir/log.testlog`, `dir/dir/dir/log.testlog.2`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{}, `././log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.1`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{`././././log.testlog.9`}, `log.testlog`, 10, 1, 2, []string{`log.testlog`, `log.testlog.10`}, rollingNameModePostfix),
+	createRollingSizeFileWriterTestCase([]string{"././dir/dir/log.testlog.a", "././dir/dir/log.testlog.1b"}, "dir/dir/log.testlog", 10, 1, 2, []string{"dir/dir/log.testlog", "dir/dir/log.testlog.1", "dir/dir/log.testlog.a", "dir/dir/log.testlog.1b"}, rollingNameModePostfix),
 	// ====================
 }

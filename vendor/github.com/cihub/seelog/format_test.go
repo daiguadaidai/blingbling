@@ -121,7 +121,6 @@ var formatTests = []formatTest{
 	{"[%Level]%MsgX[%Level]", "test", ErrorLvl, "[Error]testX[Error]", false},
 	{"%Levell%Msgl", "Test", CriticalLvl, "CriticallTestl", false},
 	{"%Lev%Msg%LEVEL%LEV%l%Msg", "Test", InfoLvl, "InfTestINFOINFiTest", false},
-	{"%r", "", CriticalLvl, "\r", false},
 	{"%n", "", CriticalLvl, "\n", false},
 	{"%t", "", CriticalLvl, "\t", false},
 }
